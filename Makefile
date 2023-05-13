@@ -1,4 +1,5 @@
-SOURCEDIRS=syslog_ng_cfg_helper tests
+ROOT_DIR=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+SOURCEDIRS=$(ROOT_DIR)/syslog_ng_cfg_helper $(ROOT_DIR)/tests
 
 venv:
 	poetry install
@@ -10,7 +11,7 @@ black-check:
 	poetry run black --check $(SOURCEDIRS)
 
 pylint:
-	poetry run pylint --rcfile=$(PWD)/.pylintrc $(SOURCEDIRS)
+	poetry run pylint --rcfile=$(ROOT_DIR)/.pylintrc $(SOURCEDIRS)
 
 pycodestyle:
 	poetry run pycodestyle --ignore=E501,E121,E123,E126,E203,E226,E24,E704,W503,W504 $(SOURCEDIRS)
