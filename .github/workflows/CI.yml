@@ -7,6 +7,17 @@ on:
 jobs:
   tests:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version:
+          - "3"
+          - "3.8"
+          - "3.9"
+          - "3.10"
+          - "3.11"
+      fail-fast: false
+    container:
+      image: python:${{ matrix.python-version }}
     steps:
       - name: Checkout source
         uses: actions/checkout@v3
