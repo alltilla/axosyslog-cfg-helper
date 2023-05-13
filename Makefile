@@ -43,6 +43,9 @@ endif
 		--source-dir=$(SYSLOG_NG_SOURCE_DIR) \
 		--output=$(DATABASE_FILE)
 
+package: db
+	poetry build
+
 clean:
 	rm -rf $(SYSLOG_NG_SOURCE_DIR)
 	rm -f $(SYSLOG_NG_SOURCE_DIR).tar.gz
