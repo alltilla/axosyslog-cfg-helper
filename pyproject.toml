@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "syslog-ng-cfg-helper"
+version = "0.1.0"
+description = ""
+authors = ["Attila Szakacs <szakacs.attila96@gmail.com>"]
+readme = "README.md"
+packages = [{include = "syslog_ng_cfg_helper"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+[tool.poetry.group.dev.dependencies]
+neologism = "^0.0.8"
+pytest = "^7.2.1"
+mypy = "^1.0.1"
+black = "^23.3.0"
+pylint = "^2.17.4"
+pycodestyle = "^2.10.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 120
+exclude = "tests/module_loader/test_parse_driver.py"
+
+[tool.poetry.scripts]
+syslog-ng-cfg-helper = 'syslog_ng_cfg_helper.console:run'

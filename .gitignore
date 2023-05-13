@@ -1,0 +1,5 @@
+.cache/*
+.coverage
+htmlcov/*
+**__pycache__**
+.vscode
