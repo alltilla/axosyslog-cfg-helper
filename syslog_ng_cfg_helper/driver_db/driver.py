@@ -55,9 +55,6 @@ class Driver(Block):
         block_repr = super().__repr__()
         return f"Driver({repr(self.context)}, {block_repr[len('Block(') :]}"
 
-    def __str__(self) -> str:
-        return f"{self.context} {super().__str__()}"
-
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Driver):
             return False

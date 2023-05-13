@@ -106,7 +106,7 @@ def test_str() -> None:
     assert (
         str(driver)
         == """
-context driver(
+driver(
     positional-option-2
     block(
         positional-option-1
