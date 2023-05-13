@@ -49,7 +49,10 @@ class Driver(Block):
         return self
 
     def to_dict(self) -> Dict[str, Any]:
-        return super().to_dict() | {"context": self.context}
+        as_dict = super().to_dict()
+        as_dict.update({"context": self.context})
+
+        return as_dict
 
     def __repr__(self) -> str:
         block_repr = super().__repr__()
