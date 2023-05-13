@@ -90,7 +90,7 @@ The [Makefile](https://github.com/alltilla/syslog-ng-cfg-helper/blob/master/Make
     * You can change the install path with `make bison BISON_INSTALL_PATH=...`
   * `make check` runs the unit tests, style-checkers and linters.
   * `make format` formats the code.
-  * `make db` download the syslog-ng release tarball and generates the option database.
+  * `make db` downloads the syslog-ng release tarball and generates the option database.
   * `make package` creates the pip package.
 
 ## Community
