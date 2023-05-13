@@ -3,3 +3,5 @@
 htmlcov/*
 **__pycache__**
 .vscode
+
+syslog_ng_cfg_helper/syslog-ng-cfg-helper.db

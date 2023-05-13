@@ -27,3 +27,8 @@ check: pytest linters
 
 format:
 	poetry run black $(SOURCEDIRS)
+
+db:
+	poetry run python $(ROOT_DIR)/syslog_ng_cfg_helper/build_db.py \
+		--source-dir=$(or $(SOURCE_DIR),$(ROOT_DIR)/syslog-ng) \
+		--output=$(or $(OUTPUT),$(ROOT_DIR)/syslog_ng_cfg_helper/syslog-ng-cfg-helper.db)
