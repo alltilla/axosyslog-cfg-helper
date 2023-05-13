@@ -3,7 +3,9 @@ SOURCEDIRS=$(ROOT_DIR)/syslog_ng_cfg_helper $(ROOT_DIR)/tests
 
 BISON_INSTALL_PATH := /usr/local
 
-SYSLOG_NG_TARBALL_URL := https://github.com/syslog-ng/syslog-ng/releases/download/syslog-ng-4.2.0/syslog-ng-4.2.0.tar.gz
+SYSLOG_NG_VERSION := 4.2.0
+SYSLOG_NG_RELEASE_URL := https://github.com/syslog-ng/syslog-ng/releases/tag/syslog-ng-$(SYSLOG_NG_VERSION)
+SYSLOG_NG_TARBALL_URL := https://github.com/syslog-ng/syslog-ng/releases/download/syslog-ng-$(SYSLOG_NG_VERSION)/syslog-ng-$(SYSLOG_NG_VERSION).tar.gz
 SYSLOG_NG_SOURCE_DIR := $(ROOT_DIR)/syslog-ng
 DATABASE_FILE := $(ROOT_DIR)/syslog_ng_cfg_helper/syslog-ng-cfg-helper.db
 
@@ -52,6 +54,12 @@ endif
 
 package: db
 	poetry build
+
+print-syslog-ng-version:
+	@echo $(SYSLOG_NG_VERSION)
+
+print-syslog-ng-release-url:
+	@echo $(SYSLOG_NG_RELEASE_URL)
 
 clean:
 	rm -rf $(SYSLOG_NG_SOURCE_DIR)

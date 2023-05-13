@@ -1,0 +1,63 @@
+name: Release
+
+permissions:
+    contents: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        required: true
+        type: choice
+        options:
+          - "TestPyPi"
+          - "PyPi"
+        default: "TestPyPi"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+
+      - name: Setup environment
+        run: |
+          python3 -m pip install poetry
+          make venv
+          make bison BISON_INSTALL_PATH=/tmp/bison-install
+          echo "/tmp/bison-install/bin" >> ${GITHUB_PATH}
+
+      - name: Create package
+        run: make package
+
+      - name: Publish package (test.pypi.org)
+        if: github.event.inputs.target== 'TestPyPi'
+        run: |
+          poetry config repositories.test-pypi https://test.pypi.org/legacy/
+          poetry config pypi-token.test-pypi ${{ secrets.TEST_PYPI_API_TOKEN }}
+          poetry publish -r test-pypi
+
+      - name: Publish package (pypi.org)
+        if: github.event.inputs.target== 'PyPi'
+        run: |
+            poetry config pypi-token.pypi ${{ secrets.PYPI_API_TOKEN }}
+            poetry publish
+
+      - name: Publish GitHub Release
+        if: github.event.inputs.target== 'PyPi'
+        run: |
+          VERSION=$(poetry version -s)
+          TITLE="${VERSION}"
+          DESCRIPTION="Generated for [syslog-ng $(make print-syslog-ng-version)]($(make print-syslog-ng-release-url))."
+          TAG="${VERSION}"
+          TARBALL="dist/syslog_ng_cfg_helper-${VERSION}.tar.gz"
+
+          gh release create \
+            --draft \
+            --title "${TITLE}" \
+            --notes "${DESCRIPTION}" \
+            "${TAG}" \
+            "${TARBALL}"
