@@ -1,9 +1,16 @@
 ROOT_DIR=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 SOURCEDIRS=$(ROOT_DIR)/syslog_ng_cfg_helper $(ROOT_DIR)/tests
 
+BISON_INSTALL_PATH := /usr/local
+
 SYSLOG_NG_TARBALL_URL := https://github.com/syslog-ng/syslog-ng/releases/download/syslog-ng-4.2.0/syslog-ng-4.2.0.tar.gz
 SYSLOG_NG_SOURCE_DIR := $(ROOT_DIR)/syslog-ng
 DATABASE_FILE := $(ROOT_DIR)/syslog_ng_cfg_helper/syslog-ng-cfg-helper.db
+
+bison:
+	wget https://ftp.gnu.org/gnu/bison/bison-3.7.6.tar.gz -O /tmp/bison.tar.gz
+	tar -xzf /tmp/bison.tar.gz -C /tmp
+	cd /tmp/bison-3.7.6 && ./configure --prefix=$(BISON_INSTALL_PATH) --disable-nls && make -j && make install
 
 venv:
 	poetry install

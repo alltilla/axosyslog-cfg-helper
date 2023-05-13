@@ -82,8 +82,12 @@ Any contribution is welcome :)
 ### Local setup
 The project uses [poetry](https://python-poetry.org/) as a dependency management system.
 
-The [`Makefile`](https://github.com/alltilla/syslog-ng-cfg-helper/blob/master/Makefile) consists of some useful commands:
+Building of the option database needs the [neologism](https://github.com/alltilla/neologism) pip package, which gets installed by poetry, however it has another dependency, which is [bison](https://www.gnu.org/software/bison/). Make sure to install bison (at least 3.7.6) on you system if you wan't to develop locally. `make bison` can help with that.
+
+The [Makefile](https://github.com/alltilla/syslog-ng-cfg-helper/blob/master/Makefile) consists of some useful commands:
   * `make venv` prepares the venv.
+  * `make bison` downloads bison 3.7.6, builds it and installs it under `/usr/local`.
+    * You can change the install path with `make bison BISON_INSTALL_PATH=...`
   * `make check` runs the unit tests, style-checkers and linters.
   * `make format` formats the code.
   * `make db` download the syslog-ng release tarball and generates the option database.

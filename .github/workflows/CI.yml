@@ -24,9 +24,9 @@ jobs:
 
       - name: Setup environment
         run: |
-          apt update && apt install -y bison
           python3 -m pip install poetry
           make venv
+          make bison
 
       - name: pytest
         run: make pytest
