@@ -12,7 +12,9 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Setup environment
-        run: python3 -m pip install poetry
+        run: |
+          python3 -m pip install poetry
+          make venv
 
       - name: pytest
         run: make pytest
@@ -24,7 +26,9 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Setup environment
-        run: python3 -m pip install poetry
+        run: |
+          python3 -m pip install poetry
+          make venv
 
       - name: black
         run: make black-check
