@@ -5,4 +5,5 @@ htmlcov/*
 .vscode
 dist
 
+syslog-ng.tar.gz
 syslog_ng_cfg_helper/syslog-ng-cfg-helper.db
