@@ -6,4 +6,5 @@ htmlcov/*
 dist
 
 syslog-ng.tar.gz
+syslog-ng/*
 syslog_ng_cfg_helper/syslog-ng-cfg-helper.db
