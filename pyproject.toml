@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "syslog-ng-cfg-helper"
-version = "0.1.0"
-description = ""
+version = "1.0.0"
+description = "Configuration helper for syslog-ng."
 authors = ["Attila Szakacs <szakacs.attila96@gmail.com>"]
 readme = "README.md"
 packages = [{include = "syslog_ng_cfg_helper"}]
