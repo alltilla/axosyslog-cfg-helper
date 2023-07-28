@@ -1,11 +1,18 @@
 from __future__ import annotations
+from dataclasses import dataclass, field
 from typing import Any, Dict, Iterable, FrozenSet, Optional, Set, Tuple
 
-from .exceptions import MergeException
+from .exceptions import DiffException, MergeException
 from .utils import indent
 
 
 Params = Tuple[str, ...]
+
+
+@dataclass
+class OptionDiff:
+    added_params: Set[Params] = field(default_factory=set)
+    removed_params: Set[Params] = field(default_factory=set)
 
 
 class Option:
@@ -32,6 +39,24 @@ class Option:
             raise MergeException(f"Cannot merge Options with different names: '{self.name}' and '{other.name}'")
 
         self.__params |= other.__params
+
+    def diff(self, compared_to: Option) -> OptionDiff:
+        diff = OptionDiff()
+
+        if self.name != compared_to.name:
+            raise DiffException(
+                f"Cannot check differences of Options with different names: '{self.name}' and '{compared_to.name}'"
+            )
+
+        for their_params in compared_to.params:
+            if their_params not in self.params:
+                diff.removed_params.add(their_params)
+
+        for our_params in self.params:
+            if our_params not in compared_to.params:
+                diff.added_params.add(our_params)
+
+        return diff
 
     @staticmethod
     def from_dict(as_dict: Dict[str, Any]) -> Option:

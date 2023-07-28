@@ -3,8 +3,8 @@ from typing import Set
 import json
 import pytest
 
-from syslog_ng_cfg_helper.driver_db.exceptions import MergeException
-from syslog_ng_cfg_helper.driver_db.option import Option, Params
+from syslog_ng_cfg_helper.driver_db.exceptions import DiffException, MergeException
+from syslog_ng_cfg_helper.driver_db.option import Option, OptionDiff, Params
 
 
 def test_named_defaults() -> None:
@@ -129,3 +129,31 @@ def test_serialization(option: Option) -> None:
     deserialized = Option.from_dict(json.loads(serialized))
 
     assert option == deserialized
+
+
+@pytest.mark.parametrize(
+    "old_option, new_option, expected_diff",
+    [
+        (
+            Option("option", {("param-1", "param-2")}),
+            Option("option", {("param-1", "param-2")}),
+            OptionDiff(),
+        ),
+        (
+            Option("option", {("param-1", "param-2")}),
+            Option("option", {("param-3", "param-4")}),
+            OptionDiff(added_params={("param-3", "param-4")}, removed_params={("param-1", "param-2")}),
+        ),
+    ],
+    ids=range(2),
+)
+def test_diff(old_option: Option, new_option: Option, expected_diff: OptionDiff) -> None:
+    assert new_option.diff(old_option) == expected_diff
+
+
+def test_diff_error() -> None:
+    old_option = Option("option-1")
+    new_option = Option("option-2")
+
+    with pytest.raises(DiffException):
+        new_option.diff(old_option)
