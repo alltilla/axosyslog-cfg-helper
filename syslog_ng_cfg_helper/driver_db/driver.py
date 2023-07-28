@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from typing import Dict, Any
 
-from .exceptions import MergeException
-from .block import Block
+from .exceptions import DiffException, MergeException
+from .block import Block, BlockDiff
 from .option import Option
+
+DriverDiff = BlockDiff
 
 
 class Driver(Block):
@@ -35,6 +37,18 @@ class Driver(Block):
         block.merge(self)
 
         return block
+
+    def diff(self, compared_to: object) -> DriverDiff:
+        if not isinstance(compared_to, Driver):
+            raise DiffException("Cannot check differences of Drivers and non-Drivers")
+
+        if self.context != compared_to.context:
+            raise DiffException(
+                "Cannot check differences of Drivers with different contexts: "
+                f"'{self.context}' and '{compared_to.context}'"
+            )
+
+        return super().diff(compared_to)
 
     @staticmethod
     def from_dict(as_dict: Dict[str, Any]) -> Driver:

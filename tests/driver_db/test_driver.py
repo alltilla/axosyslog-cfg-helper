@@ -1,10 +1,10 @@
 import json
 import pytest
 
-from syslog_ng_cfg_helper.driver_db.driver import Driver
+from syslog_ng_cfg_helper.driver_db.driver import Driver, DriverDiff
 from syslog_ng_cfg_helper.driver_db.block import Block
-from syslog_ng_cfg_helper.driver_db.exceptions import MergeException
-from syslog_ng_cfg_helper.driver_db.option import Option
+from syslog_ng_cfg_helper.driver_db.exceptions import DiffException, MergeException
+from syslog_ng_cfg_helper.driver_db.option import Option, OptionDiff
 
 
 def test_defaults() -> None:
@@ -128,3 +128,73 @@ def test_serialization() -> None:
     deserialized = Driver.from_dict(json.loads(serialized))
 
     assert driver == deserialized
+
+
+def test_diff() -> None:
+    old_driver = Driver("ctx", "driver")
+    new_driver = Driver("ctx", "driver")
+    assert new_driver.diff(old_driver) == DriverDiff()
+
+    # Added Option
+    new_driver.add_option(Option("option"))
+    assert new_driver.diff(old_driver) == DriverDiff(
+        added_options={"option": Option("option")},
+    )
+    new_driver.remove_option("option")
+
+    # Removed Option
+    old_driver.add_option(Option("option"))
+    assert new_driver.diff(old_driver) == DriverDiff(
+        removed_options={"option": Option("option")},
+    )
+    old_driver.remove_option("option")
+
+    # Changed Option
+    old_driver.add_option(Option("option"))
+    new_driver.add_option(Option("option", {("param",)}))
+    assert new_driver.diff(old_driver) == DriverDiff(
+        changed_options={"option": OptionDiff(added_params={("param",)})},
+    )
+    old_driver.remove_option("option")
+    new_driver.remove_option("option")
+
+    # Added Block
+    new_driver.add_block(Block("block"))
+    assert new_driver.diff(old_driver) == DriverDiff(
+        added_blocks={"block": Block("block")},
+    )
+    new_driver.remove_block("block")
+
+    # Removed Block
+    old_driver.add_block(Block("block"))
+    assert new_driver.diff(old_driver) == DriverDiff(
+        removed_blocks={"block": Block("block")},
+    )
+    old_driver.remove_block("block")
+
+    # Changed Block
+    old_driver.add_block(Block("block"))
+    new_driver.add_block(Block("block"))
+    new_driver.get_block("block").add_option(Option("option"))
+    assert new_driver.diff(old_driver) == DriverDiff(
+        changed_blocks={"block": DriverDiff(added_options={"option": Option("option")})},
+    )
+    old_driver.remove_block("block")
+    new_driver.remove_block("block")
+
+
+def test_diff_error() -> None:
+    old_driver = Driver("ctx", "driver-1")
+    new_driver = Driver("ctx", "driver-2")
+    with pytest.raises(DiffException):
+        new_driver.diff(old_driver)
+
+    old_driver = Driver("ctx-1", "driver")
+    new_driver = Driver("ctx-2", "driver")
+    with pytest.raises(DiffException):
+        new_driver.diff(old_driver)
+
+    old_block = Block("foo")
+    new_driver = Driver("ctx", "foo")
+    with pytest.raises(DiffException):
+        new_driver.diff(old_block)
