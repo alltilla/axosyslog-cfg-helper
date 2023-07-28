@@ -1,9 +1,21 @@
 from __future__ import annotations
+from dataclasses import dataclass, field
 from typing import Any, Dict, Optional, ValuesView
 
-from .exceptions import MergeException
-from .option import Option
+from .exceptions import DiffException, MergeException
+from .option import Option, OptionDiff
 from .utils import indent, sorted_with_none
+
+
+@dataclass
+class BlockDiff:
+    added_blocks: Dict[Optional[str], Block] = field(default_factory=dict)
+    removed_blocks: Dict[Optional[str], Block] = field(default_factory=dict)
+    changed_blocks: Dict[Optional[str], BlockDiff] = field(default_factory=dict)
+
+    added_options: Dict[Optional[str], Option] = field(default_factory=dict)
+    removed_options: Dict[Optional[str], Option] = field(default_factory=dict)
+    changed_options: Dict[Optional[str], OptionDiff] = field(default_factory=dict)
 
 
 class Block:
@@ -63,6 +75,53 @@ class Block:
         clone.merge(self)
 
         return clone
+
+    def __gather_option_diffs(self, compared_to: Block, diff: BlockDiff) -> None:
+        for their_option_name, their_option in compared_to.__options.items():
+            if their_option_name not in self.__options.keys():
+                diff.removed_options[their_option_name] = their_option.copy()
+                continue
+
+            our_option = self.get_option(their_option_name)
+            if our_option == their_option:
+                continue
+
+            diff.changed_options[their_option_name] = our_option.diff(their_option)
+
+        for our_option_name, our_option in self.__options.items():
+            if our_option_name not in compared_to.__options.keys():
+                diff.added_options[our_option_name] = our_option.copy()
+                continue
+
+    def __gather_block_diffs(self, compared_to: Block, diff: BlockDiff) -> None:
+        for their_block_name, their_block in compared_to.__blocks.items():
+            if their_block_name not in self.__blocks.keys():
+                diff.removed_blocks[their_block_name] = their_block.copy()
+                continue
+
+            our_block = self.get_block(their_block_name)
+            if our_block == their_block:
+                continue
+
+            diff.changed_blocks[their_block_name] = our_block.diff(their_block)
+
+        for our_block_name, our_block in self.__blocks.items():
+            if our_block_name not in compared_to.__blocks.keys():
+                diff.added_blocks[our_block_name] = our_block.copy()
+                continue
+
+    def diff(self, compared_to: Block) -> BlockDiff:
+        diff = BlockDiff()
+
+        if self.name != compared_to.name:
+            raise DiffException(
+                f"Cannot check differences of Blocks with different names: '{self.name}' and '{compared_to.name}'"
+            )
+
+        self.__gather_option_diffs(compared_to, diff)
+        self.__gather_block_diffs(compared_to, diff)
+
+        return diff
 
     @staticmethod
     def from_dict(as_dict: Dict[str, Any]) -> Block:
