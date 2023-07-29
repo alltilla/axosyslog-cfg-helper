@@ -153,7 +153,7 @@ def test_diff() -> None:
     old_driver.add_option(Option("option"))
     new_driver.add_option(Option("option", {("param",)}))
     assert new_driver.diff(old_driver) == DriverDiff(
-        changed_options={"option": OptionDiff(added_params={("param",)})},
+        changed_options={"option": OptionDiff("option", added_params={("param",)})},
     )
     old_driver.remove_option("option")
     new_driver.remove_option("option")

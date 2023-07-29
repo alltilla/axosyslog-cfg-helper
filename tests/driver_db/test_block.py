@@ -220,7 +220,7 @@ def test_diff() -> None:
     old_block.add_option(Option("option"))
     new_block.add_option(Option("option", {("param",)}))
     assert new_block.diff(old_block) == BlockDiff(
-        changed_options={"option": OptionDiff(added_params={("param",)})},
+        changed_options={"option": OptionDiff("option", added_params={("param",)})},
     )
     old_block.remove_option("option")
     new_block.remove_option("option")

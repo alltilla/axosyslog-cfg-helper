@@ -137,12 +137,12 @@ def test_serialization(option: Option) -> None:
         (
             Option("option", {("param-1", "param-2")}),
             Option("option", {("param-1", "param-2")}),
-            OptionDiff(),
+            OptionDiff("option"),
         ),
         (
             Option("option", {("param-1", "param-2")}),
             Option("option", {("param-3", "param-4")}),
-            OptionDiff(added_params={("param-3", "param-4")}, removed_params={("param-1", "param-2")}),
+            OptionDiff("option", added_params={("param-3", "param-4")}, removed_params={("param-1", "param-2")}),
         ),
     ],
     ids=range(2),
@@ -157,3 +157,37 @@ def test_diff_error() -> None:
 
     with pytest.raises(DiffException):
         new_option.diff(old_option)
+
+
+@pytest.mark.parametrize(
+    "diff, expected_str",
+    [
+        (
+            OptionDiff("option"),
+            " option()",
+        ),
+        (
+            OptionDiff(None),
+            "",
+        ),
+        (
+            OptionDiff(
+                "option",
+                removed_params={("param-1", "param-2"), ("param-3", "param-4")},
+                added_params={("param-5", "param-6"), ("param-7", "param-8")},
+            ),
+            " option(\n-    param-1 param-2\n-    param-3 param-4\n+    param-5 param-6\n+    param-7 param-8\n )",
+        ),
+        (
+            OptionDiff(
+                None,
+                removed_params={("param-1", "param-2"), ("param-3", "param-4")},
+                added_params={("param-5", "param-6"), ("param-7", "param-8")},
+            ),
+            "-param-1 param-2\n-param-3 param-4\n+param-5 param-6\n+param-7 param-8",
+        ),
+    ],
+    ids=range(4),
+)
+def test_format_diff(diff: OptionDiff, expected_str: str) -> None:
+    assert str(diff) == expected_str
