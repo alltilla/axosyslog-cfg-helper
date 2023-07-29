@@ -200,11 +200,12 @@ def test_serialization() -> None:
 def test_diff() -> None:
     old_block = Block("block")
     new_block = Block("block")
-    assert new_block.diff(old_block) == BlockDiff()
+    assert new_block.diff(old_block) == BlockDiff("block")
 
     # Added Option
     new_block.add_option(Option("option"))
     assert new_block.diff(old_block) == BlockDiff(
+        "block",
         added_options={"option": Option("option")},
     )
     new_block.remove_option("option")
@@ -212,6 +213,7 @@ def test_diff() -> None:
     # Removed Option
     old_block.add_option(Option("option"))
     assert new_block.diff(old_block) == BlockDiff(
+        "block",
         removed_options={"option": Option("option")},
     )
     old_block.remove_option("option")
@@ -220,6 +222,7 @@ def test_diff() -> None:
     old_block.add_option(Option("option"))
     new_block.add_option(Option("option", {("param",)}))
     assert new_block.diff(old_block) == BlockDiff(
+        "block",
         changed_options={"option": OptionDiff("option", added_params={("param",)})},
     )
     old_block.remove_option("option")
@@ -228,6 +231,7 @@ def test_diff() -> None:
     # Added Block
     new_block.add_block(Block("inner-block"))
     assert new_block.diff(old_block) == BlockDiff(
+        "block",
         added_blocks={"inner-block": Block("inner-block")},
     )
     new_block.remove_block("inner-block")
@@ -235,6 +239,7 @@ def test_diff() -> None:
     # Removed Block
     old_block.add_block(Block("inner-block"))
     assert new_block.diff(old_block) == BlockDiff(
+        "block",
         removed_blocks={"inner-block": Block("inner-block")},
     )
     old_block.remove_block("inner-block")
@@ -244,7 +249,8 @@ def test_diff() -> None:
     new_block.add_block(Block("inner-block"))
     new_block.get_block("inner-block").add_option(Option("option"))
     assert new_block.diff(old_block) == BlockDiff(
-        changed_blocks={"inner-block": BlockDiff(added_options={"option": Option("option")})},
+        "block",
+        changed_blocks={"inner-block": BlockDiff("inner-block", added_options={"option": Option("option")})},
     )
     old_block.remove_block("inner-block")
     new_block.remove_block("inner-block")

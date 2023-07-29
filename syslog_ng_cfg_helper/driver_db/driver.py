@@ -1,12 +1,16 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Dict, Any
 
 from .exceptions import DiffException, MergeException
 from .block import Block, BlockDiff
 from .option import Option
 
-DriverDiff = BlockDiff
+
+@dataclass
+class DriverDiff(BlockDiff):
+    context: str = ""
 
 
 class Driver(Block):
@@ -48,7 +52,17 @@ class Driver(Block):
                 f"'{self.context}' and '{compared_to.context}'"
             )
 
-        return super().diff(compared_to)
+        block_diff = super().diff(compared_to)
+        return DriverDiff(
+            context=self.context,
+            name=block_diff.name,
+            added_blocks=block_diff.added_blocks,
+            removed_blocks=block_diff.removed_blocks,
+            changed_blocks=block_diff.changed_blocks,
+            added_options=block_diff.added_options,
+            removed_options=block_diff.removed_options,
+            changed_options=block_diff.changed_options,
+        )
 
     @staticmethod
     def from_dict(as_dict: Dict[str, Any]) -> Driver:

@@ -9,6 +9,8 @@ from .utils import indent, sorted_with_none
 
 @dataclass
 class BlockDiff:
+    name: Optional[str]
+
     added_blocks: Dict[Optional[str], Block] = field(default_factory=dict)
     removed_blocks: Dict[Optional[str], Block] = field(default_factory=dict)
     changed_blocks: Dict[Optional[str], BlockDiff] = field(default_factory=dict)
@@ -111,7 +113,7 @@ class Block:
                 continue
 
     def diff(self, compared_to: Block) -> BlockDiff:
-        diff = BlockDiff()
+        diff = BlockDiff(self.name)
 
         if self.name != compared_to.name:
             raise DiffException(

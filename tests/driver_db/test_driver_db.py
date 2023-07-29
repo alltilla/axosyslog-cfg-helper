@@ -160,7 +160,11 @@ def test_diff() -> None:
     new_driver_db.get_driver("ctx", "driver").add_option(Option("option"))
     assert new_driver_db.diff(old_driver_db) == DriverDBDiff(
         changed_contexts={
-            "ctx": ContextDiff(changed_drivers={"driver": DriverDiff(added_options={"option": Option("option")})})
+            "ctx": ContextDiff(
+                changed_drivers={
+                    "driver": DriverDiff(context="ctx", name="driver", added_options={"option": Option("option")})
+                }
+            )
         }
     )
     old_driver_db.remove_context("ctx")
