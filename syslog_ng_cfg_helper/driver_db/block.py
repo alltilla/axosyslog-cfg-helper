@@ -4,7 +4,7 @@ from typing import Any, Dict, Optional, ValuesView
 
 from .exceptions import DiffException, MergeException
 from .option import Option, OptionDiff
-from .utils import indent, sorted_with_none
+from .utils import diff_indent, indent, prepend_each_line, sorted_with_none
 
 
 @dataclass
@@ -18,6 +18,36 @@ class BlockDiff:
     added_options: Dict[Optional[str], Option] = field(default_factory=dict)
     removed_options: Dict[Optional[str], Option] = field(default_factory=dict)
     changed_options: Dict[Optional[str], OptionDiff] = field(default_factory=dict)
+
+    def __str__(self) -> str:
+        string = f" {self.name}(\n"
+
+        strs: Dict[Optional[str], str] = {}
+
+        for block_name, block in self.added_blocks.items():
+            strs[block_name] = f"{prepend_each_line(indent(str(block)), '+')}\n"
+
+        for block_name, block in self.removed_blocks.items():
+            strs[block_name] = f"{prepend_each_line(indent(str(block)), '-')}\n"
+
+        for block_name, block_diff in self.changed_blocks.items():
+            strs[block_name] = f"{diff_indent(str(block_diff))}\n"
+
+        for option_name, option in self.added_options.items():
+            strs[option_name] = f"{prepend_each_line(indent(str(option)), '+')}\n"
+
+        for option_name, option in self.removed_options.items():
+            strs[option_name] = f"{prepend_each_line(indent(str(option)), '-')}\n"
+
+        for option_name, option_diff in self.changed_options.items():
+            strs[option_name] = f"{diff_indent(str(option_diff))}\n"
+
+        for block_or_option_name in sorted_with_none(strs.keys()):
+            string += strs[block_or_option_name]
+
+        string += " )"
+
+        return string
 
 
 class Block:

@@ -262,3 +262,50 @@ def test_diff_error() -> None:
 
     with pytest.raises(DiffException):
         new_block.diff(old_block)
+
+
+def test_diff_str() -> None:
+    old_block = Block("block")
+    new_block = Block("block")
+
+    # Added Option
+    new_block.add_option(Option("new-option"))
+
+    # Removed Option
+    old_block.add_option(Option("old-option"))
+
+    # Changed Option
+    old_block.add_option(Option("option"))
+    new_block.add_option(Option("option", {("param",)}))
+
+    # Added Block
+    new_block.add_block(Block("new-inner-block"))
+
+    # Removed Block
+    old_block.add_block(Block("old-inner-block"))
+
+    # Changed Block
+    old_block.add_block(Block("inner-block"))
+    new_block.add_block(Block("inner-block"))
+    new_block.get_block("inner-block").add_option(Option("option"))
+
+    expected_str = """
+ block(
+     inner-block(
++        option()
+     )
++    new-inner-block(
++    )
++    new-option()
+-    old-inner-block(
+-    )
+-    old-option()
+     option(
++        param
+     )
+ )
+"""[
+        1:-1
+    ]
+
+    assert str(new_block.diff(old_block)) == expected_str
