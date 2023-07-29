@@ -139,7 +139,7 @@ def test_diff() -> None:
     new_driver_db.add_driver(Driver("ctx", "driver-1"))
     new_driver_db.add_driver(Driver("ctx", "driver-2"))
     assert new_driver_db.diff(old_driver_db) == DriverDBDiff(
-        changed_contexts={"ctx": ContextDiff(added_drivers={"driver-2": Driver("ctx", "driver-2")})}
+        changed_contexts={"ctx": ContextDiff("ctx", added_drivers={"driver-2": Driver("ctx", "driver-2")})}
     )
     old_driver_db.remove_context("ctx")
     new_driver_db.remove_context("ctx")
@@ -149,7 +149,7 @@ def test_diff() -> None:
     new_driver_db.add_driver(Driver("ctx", "driver-1"))
     old_driver_db.add_driver(Driver("ctx", "driver-2"))
     assert new_driver_db.diff(old_driver_db) == DriverDBDiff(
-        changed_contexts={"ctx": ContextDiff(removed_drivers={"driver-2": Driver("ctx", "driver-2")})}
+        changed_contexts={"ctx": ContextDiff("ctx", removed_drivers={"driver-2": Driver("ctx", "driver-2")})}
     )
     old_driver_db.remove_context("ctx")
     new_driver_db.remove_context("ctx")
@@ -161,11 +161,65 @@ def test_diff() -> None:
     assert new_driver_db.diff(old_driver_db) == DriverDBDiff(
         changed_contexts={
             "ctx": ContextDiff(
+                "ctx",
                 changed_drivers={
                     "driver": DriverDiff(context="ctx", name="driver", added_options={"option": Option("option")})
-                }
+                },
             )
         }
     )
     old_driver_db.remove_context("ctx")
     new_driver_db.remove_context("ctx")
+
+
+def test_diff_str() -> None:
+    old_driver_db = DriverDB()
+    new_driver_db = DriverDB()
+
+    # Added context
+    new_driver_db.add_driver(Driver("new-ctx", "driver"))
+
+    # Removed context
+    old_driver_db.add_driver(Driver("old-ctx", "driver"))
+
+    # Added driver
+    new_driver_db.add_driver(Driver("ctx", "new-driver"))
+
+    # Removed driver
+    old_driver_db.add_driver(Driver("ctx", "old-driver"))
+
+    # Changed driver
+    old_driver_db.add_driver(Driver("ctx", "driver"))
+    new_driver_db.add_driver(Driver("ctx", "driver"))
+    new_driver_db.get_driver("ctx", "driver").add_option(Option("option"))
+
+    expected_str = """
+--- a/ctx
++++ b/ctx
+
+ driver(
++    option()
+ )
+
++new-driver(
++)
+
+-old-driver(
+-)
+
+--- /dev/null
++++ b/new-ctx
+
++driver(
++)
+
+--- a/old-ctx
++++ /dev/null
+
+-driver(
+-)
+"""[
+        1:-1
+    ]
+
+    assert str(new_driver_db.diff(old_driver_db)) == expected_str

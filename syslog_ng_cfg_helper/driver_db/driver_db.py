@@ -6,13 +6,37 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, IO, KeysView, ValuesView
 
 from .driver import Driver, DriverDiff
+from .utils import prepend_each_line
 
 
 @dataclass
 class ContextDiff:
+    name: str
     added_drivers: Dict[str, Driver] = field(default_factory=dict)
     removed_drivers: Dict[str, Driver] = field(default_factory=dict)
     changed_drivers: Dict[str, DriverDiff] = field(default_factory=dict)
+
+    def __str__(self) -> str:
+        string = ""
+
+        strs: Dict[str, str] = {}
+
+        for driver_name, driver in self.added_drivers.items():
+            strs[driver_name] = f"{prepend_each_line(str(driver), '+')}\n\n"
+
+        for driver_name, driver in self.removed_drivers.items():
+            strs[driver_name] = f"{prepend_each_line(str(driver), '-')}\n\n"
+
+        for driver_name, driver_diff in self.changed_drivers.items():
+            strs[driver_name] = f"{str(driver_diff)}\n\n"
+
+        for driver_name in sorted(strs.keys()):
+            string += strs[driver_name]
+
+        if len(string) >= 2:
+            string = string[:-2]
+
+        return string
 
 
 @dataclass
@@ -20,6 +44,39 @@ class DriverDBDiff:
     added_contexts: Dict[str, Dict[str, Driver]] = field(default_factory=dict)
     removed_contexts: Dict[str, Dict[str, Driver]] = field(default_factory=dict)
     changed_contexts: Dict[str, ContextDiff] = field(default_factory=dict)
+
+    def __str__(self) -> str:
+        string = ""
+
+        strs: Dict[str, str] = {}
+
+        for context_name, context in self.added_contexts.items():
+            formatted = "--- /dev/null\n"
+            formatted += f"+++ b/{context_name}\n\n"
+            for driver_name in context.keys():
+                formatted += f"{prepend_each_line(str(context[driver_name]), '+')}\n\n"
+            strs[context_name] = formatted
+
+        for context_name, context in self.removed_contexts.items():
+            formatted = f"--- a/{context_name}\n"
+            formatted += "+++ /dev/null\n\n"
+            for driver_name in context.keys():
+                formatted += f"{prepend_each_line(str(context[driver_name]), '-')}\n\n"
+            strs[context_name] = formatted
+
+        for context_name, context_diff in self.changed_contexts.items():
+            formatted = f"--- a/{context_name}\n"
+            formatted += f"+++ b/{context_name}\n\n"
+            formatted += f"{str(context_diff)}\n\n"
+            strs[context_name] = formatted
+
+        for context_name in sorted(strs.keys()):
+            string += strs[context_name]
+
+        if len(string) >= 2:
+            string = string[:-2]
+
+        return string
 
 
 class DriverDB:
@@ -56,8 +113,13 @@ class DriverDB:
 
         return self
 
-    def __gather_context_diff(self, our_context: Dict[str, Driver], their_context: Dict[str, Driver]) -> ContextDiff:
-        diff = ContextDiff()
+    def __gather_context_diff(
+        self,
+        context_name: str,
+        our_context: Dict[str, Driver],
+        their_context: Dict[str, Driver],
+    ) -> ContextDiff:
+        diff = ContextDiff(context_name)
 
         for their_driver_name, their_driver in their_context.items():
             if their_driver_name not in our_context.keys():
@@ -88,7 +150,9 @@ class DriverDB:
             if our_context == their_context:
                 continue
 
-            diff.changed_contexts[their_context_name] = self.__gather_context_diff(our_context, their_context)
+            diff.changed_contexts[their_context_name] = self.__gather_context_diff(
+                their_context_name, our_context, their_context
+            )
 
         for our_context_name, our_context in self.__contexts.items():
             if our_context_name not in compared_to.__contexts.keys():
