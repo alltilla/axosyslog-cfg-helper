@@ -160,13 +160,13 @@ class Block:
 
         block_and_option_strs: Dict[Optional[str], str] = {}
 
-        for block_name in sorted(self.__blocks.keys()):
+        for block_name, block in self.__blocks.items():
             block_and_option_strs.setdefault(block_name, "")
-            block_and_option_strs[block_name] += f"{indent(str(self.get_block(block_name)))}\n"
+            block_and_option_strs[block_name] += f"{indent(str(block))}\n"
 
-        for option_name in sorted_with_none(self.__options.keys()):
+        for option_name, option in self.__options.items():
             block_and_option_strs.setdefault(option_name, "")
-            block_and_option_strs[option_name] += f"{indent(str(self.get_option(option_name)))}\n"
+            block_and_option_strs[option_name] += f"{indent(str(option))}\n"
 
         for block_or_option_name in sorted_with_none(block_and_option_strs.keys()):
             string += block_and_option_strs[block_or_option_name]
