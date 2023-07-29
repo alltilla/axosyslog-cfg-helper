@@ -41,13 +41,13 @@ check: pytest linters
 format:
 	poetry run black $(SOURCEDIRS)
 
-db:
-ifeq ("$(wildcard $(ROOT_DIR)/syslog-ng.tar.gz)","")
+syslog-ng.tar.gz:
 	rm -rf $(SYSLOG_NG_SOURCE_DIR)
 	mkdir $(SYSLOG_NG_SOURCE_DIR)
 	wget $(SYSLOG_NG_TARBALL_URL) -O $(SYSLOG_NG_SOURCE_DIR).tar.gz
 	tar --strip-components=1 -C $(SYSLOG_NG_SOURCE_DIR) -xzf $(ROOT_DIR)/syslog-ng.tar.gz
-endif
+
+db: syslog-ng.tar.gz
 	poetry run python $(ROOT_DIR)/syslog_ng_cfg_helper/build_db.py \
 		--source-dir=$(SYSLOG_NG_SOURCE_DIR) \
 		--output=$(DATABASE_FILE)

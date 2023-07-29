@@ -1,11 +1,55 @@
 from __future__ import annotations
+from dataclasses import dataclass, field
 from typing import Any, Dict, Iterable, FrozenSet, Optional, Set, Tuple
 
-from .exceptions import MergeException
+from .exceptions import DiffException, MergeException
 from .utils import indent
 
 
 Params = Tuple[str, ...]
+
+
+@dataclass
+class OptionDiff:
+    name: Optional[str]
+    added_params: Set[Params] = field(default_factory=set)
+    removed_params: Set[Params] = field(default_factory=set)
+
+    def __named_option_diff_str(self) -> str:
+        string = f" {self.name}("
+
+        if len(self.removed_params) == 0 and len(self.added_params) == 0:
+            return string + ")"
+
+        for removed_params in sorted(self.removed_params):
+            string += f"\n-{indent(' '.join(removed_params))}"
+
+        for added_params in sorted(self.added_params):
+            string += f"\n+{indent(' '.join(added_params))}"
+
+        return string + "\n )"
+
+    def __positional_option_diff_str(self) -> str:
+        string = ""
+
+        if len(self.removed_params) == 0 and len(self.added_params) == 0:
+            return string
+
+        for removed_params in sorted(self.removed_params):
+            string += f"-{' '.join(removed_params)}\n"
+
+        for added_params in sorted(self.added_params):
+            string += f"+{' '.join(added_params)}\n"
+
+        string = string[:-1]
+
+        return string
+
+    def __str__(self) -> str:
+        if self.name is not None:
+            return self.__named_option_diff_str()
+
+        return self.__positional_option_diff_str()
 
 
 class Option:
@@ -32,6 +76,24 @@ class Option:
             raise MergeException(f"Cannot merge Options with different names: '{self.name}' and '{other.name}'")
 
         self.__params |= other.__params
+
+    def diff(self, compared_to: Option) -> OptionDiff:
+        diff = OptionDiff(self.name)
+
+        if self.name != compared_to.name:
+            raise DiffException(
+                f"Cannot check differences of Options with different names: '{self.name}' and '{compared_to.name}'"
+            )
+
+        for their_params in compared_to.params:
+            if their_params not in self.params:
+                diff.removed_params.add(their_params)
+
+        for our_params in self.params:
+            if our_params not in compared_to.params:
+                diff.added_params.add(our_params)
+
+        return diff
 
     @staticmethod
     def from_dict(as_dict: Dict[str, Any]) -> Option:

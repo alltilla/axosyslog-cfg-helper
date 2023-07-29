@@ -1,9 +1,53 @@
 from __future__ import annotations
+from dataclasses import dataclass, field
 from typing import Any, Dict, Optional, ValuesView
 
-from .exceptions import MergeException
-from .option import Option
-from .utils import indent, sorted_with_none
+from .exceptions import DiffException, MergeException
+from .option import Option, OptionDiff
+from .utils import diff_indent, indent, prepend_each_line, sorted_with_none
+
+
+@dataclass
+class BlockDiff:
+    name: Optional[str]
+
+    added_blocks: Dict[Optional[str], Block] = field(default_factory=dict)
+    removed_blocks: Dict[Optional[str], Block] = field(default_factory=dict)
+    changed_blocks: Dict[Optional[str], BlockDiff] = field(default_factory=dict)
+
+    added_options: Dict[Optional[str], Option] = field(default_factory=dict)
+    removed_options: Dict[Optional[str], Option] = field(default_factory=dict)
+    changed_options: Dict[Optional[str], OptionDiff] = field(default_factory=dict)
+
+    def __str__(self) -> str:
+        string = f" {self.name}(\n"
+
+        strs: Dict[Optional[str], str] = {}
+
+        for block_name, block in self.added_blocks.items():
+            strs[block_name] = f"{prepend_each_line(indent(str(block)), '+')}\n"
+
+        for block_name, block in self.removed_blocks.items():
+            strs[block_name] = f"{prepend_each_line(indent(str(block)), '-')}\n"
+
+        for block_name, block_diff in self.changed_blocks.items():
+            strs[block_name] = f"{diff_indent(str(block_diff))}\n"
+
+        for option_name, option in self.added_options.items():
+            strs[option_name] = f"{prepend_each_line(indent(str(option)), '+')}\n"
+
+        for option_name, option in self.removed_options.items():
+            strs[option_name] = f"{prepend_each_line(indent(str(option)), '-')}\n"
+
+        for option_name, option_diff in self.changed_options.items():
+            strs[option_name] = f"{diff_indent(str(option_diff))}\n"
+
+        for block_or_option_name in sorted_with_none(strs.keys()):
+            string += strs[block_or_option_name]
+
+        string += " )"
+
+        return string
 
 
 class Block:
@@ -64,6 +108,53 @@ class Block:
 
         return clone
 
+    def __gather_option_diffs(self, compared_to: Block, diff: BlockDiff) -> None:
+        for their_option_name, their_option in compared_to.__options.items():
+            if their_option_name not in self.__options.keys():
+                diff.removed_options[their_option_name] = their_option.copy()
+                continue
+
+            our_option = self.get_option(their_option_name)
+            if our_option == their_option:
+                continue
+
+            diff.changed_options[their_option_name] = our_option.diff(their_option)
+
+        for our_option_name, our_option in self.__options.items():
+            if our_option_name not in compared_to.__options.keys():
+                diff.added_options[our_option_name] = our_option.copy()
+                continue
+
+    def __gather_block_diffs(self, compared_to: Block, diff: BlockDiff) -> None:
+        for their_block_name, their_block in compared_to.__blocks.items():
+            if their_block_name not in self.__blocks.keys():
+                diff.removed_blocks[their_block_name] = their_block.copy()
+                continue
+
+            our_block = self.get_block(their_block_name)
+            if our_block == their_block:
+                continue
+
+            diff.changed_blocks[their_block_name] = our_block.diff(their_block)
+
+        for our_block_name, our_block in self.__blocks.items():
+            if our_block_name not in compared_to.__blocks.keys():
+                diff.added_blocks[our_block_name] = our_block.copy()
+                continue
+
+    def diff(self, compared_to: Block) -> BlockDiff:
+        diff = BlockDiff(self.name)
+
+        if self.name != compared_to.name:
+            raise DiffException(
+                f"Cannot check differences of Blocks with different names: '{self.name}' and '{compared_to.name}'"
+            )
+
+        self.__gather_option_diffs(compared_to, diff)
+        self.__gather_block_diffs(compared_to, diff)
+
+        return diff
+
     @staticmethod
     def from_dict(as_dict: Dict[str, Any]) -> Block:
         self = Block(as_dict["name"])
@@ -99,13 +190,13 @@ class Block:
 
         block_and_option_strs: Dict[Optional[str], str] = {}
 
-        for block_name in sorted(self.__blocks.keys()):
+        for block_name, block in self.__blocks.items():
             block_and_option_strs.setdefault(block_name, "")
-            block_and_option_strs[block_name] += f"{indent(str(self.get_block(block_name)))}\n"
+            block_and_option_strs[block_name] += f"{indent(str(block))}\n"
 
-        for option_name in sorted_with_none(self.__options.keys()):
+        for option_name, option in self.__options.items():
             block_and_option_strs.setdefault(option_name, "")
-            block_and_option_strs[option_name] += f"{indent(str(self.get_option(option_name)))}\n"
+            block_and_option_strs[option_name] += f"{indent(str(option))}\n"
 
         for block_or_option_name in sorted_with_none(block_and_option_strs.keys()):
             string += block_and_option_strs[block_or_option_name]
