@@ -2,9 +2,24 @@ from __future__ import annotations
 
 import json
 
+from dataclasses import dataclass, field
 from typing import Any, Dict, IO, KeysView, ValuesView
 
-from .driver import Driver
+from .driver import Driver, DriverDiff
+
+
+@dataclass
+class ContextDiff:
+    added_drivers: Dict[str, Driver] = field(default_factory=dict)
+    removed_drivers: Dict[str, Driver] = field(default_factory=dict)
+    changed_drivers: Dict[str, DriverDiff] = field(default_factory=dict)
+
+
+@dataclass
+class DriverDBDiff:
+    added_contexts: Dict[str, Dict[str, Driver]] = field(default_factory=dict)
+    removed_contexts: Dict[str, Dict[str, Driver]] = field(default_factory=dict)
+    changed_contexts: Dict[str, ContextDiff] = field(default_factory=dict)
 
 
 class DriverDB:
@@ -40,6 +55,47 @@ class DriverDB:
                 self.add_driver(driver)
 
         return self
+
+    def __gather_context_diff(self, our_context: Dict[str, Driver], their_context: Dict[str, Driver]) -> ContextDiff:
+        diff = ContextDiff()
+
+        for their_driver_name, their_driver in their_context.items():
+            if their_driver_name not in our_context.keys():
+                diff.removed_drivers[their_driver_name] = their_driver.copy()
+                continue
+
+            our_driver = our_context[their_driver_name]
+            if our_driver == their_driver:
+                continue
+
+            diff.changed_drivers[their_driver_name] = our_driver.diff(their_driver)
+
+        for our_driver_name, our_driver in our_context.items():
+            if our_driver_name not in their_context.keys():
+                diff.added_drivers[our_driver_name] = our_driver.copy()
+
+        return diff
+
+    def diff(self, compared_to: DriverDB) -> DriverDBDiff:
+        diff = DriverDBDiff()
+
+        for their_context_name, their_context in compared_to.__contexts.items():
+            if their_context_name not in self.__contexts.keys():
+                diff.removed_contexts[their_context_name] = their_context.copy()
+                continue
+
+            our_context = self.__contexts[their_context_name]
+            if our_context == their_context:
+                continue
+
+            diff.changed_contexts[their_context_name] = self.__gather_context_diff(our_context, their_context)
+
+        for our_context_name, our_context in self.__contexts.items():
+            if our_context_name not in compared_to.__contexts.keys():
+                diff.added_contexts[our_context_name] = our_context.copy()
+                continue
+
+        return diff
 
     @staticmethod
     def from_dict(as_dict: Dict[str, Any]) -> DriverDB:
