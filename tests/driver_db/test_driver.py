@@ -210,3 +210,50 @@ def test_diff_error() -> None:
     new_driver = Driver("ctx", "foo")
     with pytest.raises(DiffException):
         new_driver.diff(old_block)
+
+
+def test_diff_str() -> None:
+    old_driver = Driver("ctx", "driver")
+    new_driver = Driver("ctx", "driver")
+
+    # Added Option
+    new_driver.add_option(Option("new-option"))
+
+    # Removed Option
+    old_driver.add_option(Option("old-option"))
+
+    # Changed Option
+    old_driver.add_option(Option("option"))
+    new_driver.add_option(Option("option", {("param",)}))
+
+    # Added Block
+    new_driver.add_block(Block("new-block"))
+
+    # Removed Block
+    old_driver.add_block(Block("old-block"))
+
+    # Changed Block
+    old_driver.add_block(Block("block"))
+    new_driver.add_block(Block("block"))
+    new_driver.get_block("block").add_option(Option("option"))
+
+    expected_str = """
+ driver(
+     block(
++        option()
+     )
++    new-block(
++    )
++    new-option()
+-    old-block(
+-    )
+-    old-option()
+     option(
++        param
+     )
+ )
+"""[
+        1:-1
+    ]
+
+    assert str(new_driver.diff(old_driver)) == expected_str
