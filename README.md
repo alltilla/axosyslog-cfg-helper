@@ -15,58 +15,19 @@ pipx install syslog-ng-cfg-helper
 ```
 syslog-ng-cfg-helper
 ```
-```
-Valid contexts:
-  destination
-  filter
-  options
-  parser
-  rewrite
-  source
-Print the drivers of CONTEXT with `--context CONTEXT`.
-```
 
 ### List the drivers in a context
 ```
-syslog-ng-cfg-helper -c destination
-```
-```
-Drivers of context 'destination':
-  amqp
-  example-destination
-  fifo
-  file
-  http
-  java
-...
-Print the options of DRIVER with `--context destination --driver DRIVER`.
+syslog-ng-cfg-helper --context parser
 ```
 
 ### List the options of a driver
 ```
-syslog-ng-cfg-helper -c destination -d http
+syslog-ng-cfg-helper --context parser --driver csv-parser
 ```
-```
-http(
-    accept-redirects(<yesno>)
-    azure-auth-header(
-        <path>(<string>)
-        content-type(<string>)
-        method(<string>)
-        secret(<string>)
-        workspace-id(<string>)
-    )
-    batch-bytes(<nonnegative-integer>)
-    batch-lines(<nonnegative-integer>)
-    batch-timeout(<positive-integer>)
-    body(<template-content>)
-    body-prefix(<string>)
-    body-suffix(<string>)
-    ca-dir(<string>)
-    ca-file(<path>)
-    cert-file(<path>)
-...
-```
+
+### Example
+[![Example](https://github.com/alltilla/syslog-ng-cfg-helper/blob/assets/example.gif)]()
 
 ## Development
 The tool is still in development, but most of the drivers are supported.
