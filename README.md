@@ -27,7 +27,7 @@ syslog-ng-cfg-helper --context parser --driver csv-parser
 ```
 
 ### Example
-[![Example](https://github.com/alltilla/syslog-ng-cfg-helper/blob/assets/example.gif)]()
+[![Example](https://raw.githubusercontent.com/alltilla/syslog-ng-cfg-helper/assets/example.gif)](https://raw.githubusercontent.com/alltilla/syslog-ng-cfg-helper/assets/example.gif)
 
 ## Development
 The tool is still in development, but most of the drivers are supported.
