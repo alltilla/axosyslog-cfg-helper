@@ -36,3 +36,23 @@ def sorted_with_none(iterable: Iterable):
     sorted_iterable.sort(key=none_to_empty_str)
 
     return sorted_iterable
+
+
+def color_red(string: str) -> str:
+    return "\033[1;31m" + string + "\033[0m"
+
+
+def color_green(string: str) -> str:
+    return "\033[1;32m" + string + "\033[0m"
+
+
+def color_yellow(string: str) -> str:
+    return "\033[1;33m" + string + "\033[0m"
+
+
+def color_blue(string: str) -> str:
+    return "\033[1;34m" + string + "\033[0m"
+
+
+def color_purple(string: str) -> str:
+    return "\033[1;35m" + string + "\033[0m"

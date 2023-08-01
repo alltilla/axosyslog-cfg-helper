@@ -4,7 +4,7 @@ from typing import Any, Dict, Optional, ValuesView
 
 from .exceptions import DiffException, MergeException
 from .option import Option, OptionDiff
-from .utils import diff_indent, indent, prepend_each_line, sorted_with_none
+from .utils import color_purple, diff_indent, indent, prepend_each_line, sorted_with_none
 
 
 @dataclass
@@ -185,18 +185,18 @@ class Block:
     def __repr__(self) -> str:
         return f"Block({repr(self.__name)}, {repr(self.__blocks)}, {repr(self.__options)})"
 
-    def __str__(self) -> str:
-        string = f"{self.name}(\n"
+    def __str(self, colored: bool = False) -> str:
+        string = f"{self.colorize_name(self.name, colored)}(\n"
 
         block_and_option_strs: Dict[Optional[str], str] = {}
 
         for block_name, block in self.__blocks.items():
             block_and_option_strs.setdefault(block_name, "")
-            block_and_option_strs[block_name] += f"{indent(str(block))}\n"
+            block_and_option_strs[block_name] += f"{indent(block.colored_str() if colored else str(block))}\n"
 
         for option_name, option in self.__options.items():
             block_and_option_strs.setdefault(option_name, "")
-            block_and_option_strs[option_name] += f"{indent(str(option))}\n"
+            block_and_option_strs[option_name] += f"{indent(option.colored_str() if colored else str(option))}\n"
 
         for block_or_option_name in sorted_with_none(block_and_option_strs.keys()):
             string += block_and_option_strs[block_or_option_name]
@@ -204,6 +204,16 @@ class Block:
         string += ")"
 
         return string
+
+    def __str__(self) -> str:
+        return self.__str()
+
+    def colored_str(self) -> str:
+        return self.__str(colored=True)
+
+    @staticmethod
+    def colorize_name(name: str, colored: bool = True) -> str:
+        return color_purple(name) if colored else name
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Block):

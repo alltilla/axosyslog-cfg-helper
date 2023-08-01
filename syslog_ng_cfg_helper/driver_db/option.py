@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, Iterable, FrozenSet, Optional, Set, Tuple
 
 from .exceptions import DiffException, MergeException
-from .utils import indent
+from .utils import indent, color_green, color_yellow
 
 
 Params = Tuple[str, ...]
@@ -105,26 +105,31 @@ class Option:
     def __repr__(self) -> str:
         return f"Option({repr(self.name)}, {repr(self.params)})"
 
-    def __named_option_str(self) -> str:
-        string = f"{self.__name}("
+    def __named_option_str(self, colored: bool = False) -> str:
+        assert self.__name is not None
+
+        string = f"{color_green(self.__name) if colored else self.__name}("
 
         if len(self.__params) == 0:
             return string + ")"
 
         if len(self.__params) == 1:
-            return string + " ".join(next(iter(self.__params))) + ")"
+            params_str = " ".join(next(iter(self.__params)))
+            return string + ((color_yellow(params_str) if colored else params_str) + ")")
 
         for params in sorted(self.__params):
-            string += f"\n{indent(' '.join(params))}"
+            params_str = " ".join(params)
+            string += f"\n{indent(color_yellow(params_str) if colored else params_str)}"
         string += "\n)"
 
         return string
 
-    def __positional_option_str(self) -> str:
+    def __positional_option_str(self, colored: bool = False) -> str:
         string = ""
 
         for params in sorted(self.params):
-            string += " ".join(params) + "\n"
+            params_str = " ".join(params)
+            string += (color_yellow(params_str) if colored else params_str) + "\n"
 
         string = string[:-1]
 
@@ -135,6 +140,12 @@ class Option:
             return self.__named_option_str()
 
         return self.__positional_option_str()
+
+    def colored_str(self) -> str:
+        if self.name is not None:
+            return self.__named_option_str(colored=True)
+
+        return self.__positional_option_str(colored=True)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Option):

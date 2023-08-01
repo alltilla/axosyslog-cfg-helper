@@ -6,6 +6,7 @@ from typing import Dict, Any
 from .exceptions import DiffException, MergeException
 from .block import Block, BlockDiff
 from .option import Option
+from .utils import color_blue
 
 
 @dataclass
@@ -81,6 +82,10 @@ class Driver(Block):
         as_dict.update({"context": self.context})
 
         return as_dict
+
+    @staticmethod
+    def colorize_name(name: str, colored: bool = True) -> str:
+        return color_blue(name) if colored else name
 
     def __repr__(self) -> str:
         block_repr = super().__repr__()
