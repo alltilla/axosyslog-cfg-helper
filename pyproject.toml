@@ -22,6 +22,7 @@ include = [
 
 [tool.poetry.dependencies]
 python = "^3.8"
+pyright = "^1.1.322"
 
 [tool.poetry.group.dev.dependencies]
 neologism = "^0.0.8"
