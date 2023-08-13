@@ -80,6 +80,8 @@ class DriverDBDiff:
 
 
 class DriverDB:
+    GLOBAL_OPTIONS_DRIVER_NAME = "global-options"
+
     def __init__(self) -> None:
         self.__contexts: Dict[str, Dict[str, Driver]] = {}
 
