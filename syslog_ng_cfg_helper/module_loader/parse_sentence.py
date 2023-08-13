@@ -110,6 +110,7 @@ def __parse_options_in_block(sentence: Tuple[str, ...], target_block: Block) -> 
         if i in processed:
             continue
 
+        number_of_parsed_symbols = 0
         rest_of_sentence = sentence[i:]
         if __is_block(rest_of_sentence):
             block, number_of_parsed_symbols = __parse_block(rest_of_sentence)
