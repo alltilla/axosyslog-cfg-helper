@@ -1,0 +1,360 @@
+# The configurations that used for the recording, feel free to edit them
+config:
+
+  # Specify a command to be executed
+  # like `/bin/bash -l`, `ls`, or any other commands
+  # the default is bash for Linux
+  # or powershell.exe for Windows
+  command: ""
+  
+  # Specify the current working directory path
+  # the default is the current working directory path
+  cwd: "~"
+  
+  # Export additional ENV variables
+  env:
+    recording: true
+  
+  # Explicitly set the number of columns
+  # or use `auto` to take the current
+  # number of columns of your shell
+  cols: 80
+  
+  # Explicitly set the number of rows
+  # or use `auto` to take the current
+  # number of rows of your shell
+  rows: 25
+  
+  # Amount of times to repeat GIF
+  # If value is -1, play once
+  # If value is 0, loop indefinitely
+  # If value is a positive number, loop n times
+  repeat: 0
+  
+  # Quality
+  # 1 - 100
+  quality: 100
+  
+  # Delay between frames in ms
+  # If the value is `auto` use the actual recording delays
+  frameDelay: auto
+  
+  # Maximum delay between frames in ms
+  # Ignored if the `frameDelay` isn't set to `auto`
+  # Set to `auto` to prevent limiting the max idle time
+  maxIdleTime: 3000
+  
+  # The surrounding frame box
+  # The `type` can be null, window, floating, or solid`
+  # To hide the title use the value null
+  # Don't forget to add a backgroundColor style with a null as type
+  frameBox:
+    type: null
+    title: Terminalizer
+    style:
+      border: "10px #1E1E1E solid"
+      backgroundColor: "#1E1E1E"
+      # boxShadow: none
+      # margin: ""
+  
+  # Add a watermark image to the rendered gif
+  # You need to specify an absolute path for
+  # the image on your machine or a URL, and you can also
+  # add your own CSS styles
+  watermark:
+    imagePath: null
+    style:
+      position: absolute
+      right: 15px
+      bottom: 15px
+      width: 100px
+      opacity: 0.9
+  
+  # Cursor style can be one of
+  # `block`, `underline`, or `bar`
+  cursorStyle: underline
+  
+  # Font family
+  # You can use any font that is installed on your machine
+  # in CSS-like syntax
+  fontFamily: 'MesloLGS NF'
+  
+  # The size of the font
+  fontSize: 16
+  
+  # The height of lines
+  lineHeight: 1
+  
+  # The spacing between letters
+  letterSpacing: 0
+  
+  # Theme
+  theme:
+    background: "transparent"
+    foreground: "#afafaf"
+    cursor: "#c7c7c7"
+    black: "#000000"
+    blue: "#2472c8"
+    brightBlack: "#666666"
+    brightBlue: "#3b8eea"
+    brightCyan: "#29b8db"
+    brightGreen: "#23d18b"
+    brightMagenta: "#d670d6"
+    brightRed: "#f14c4c"
+    brightWhite: "#e5e5e5"
+    brightYellow: "#f5f543"
+    cyan: "#11a8cd"
+    green: "#0dbc79"
+    magenta: "#bc3fbc"
+    red: "#cd3131"
+    white: "#e5e5e5"
+    yellow: "#e5e510"
+
+# Records, feel free to edit them
+records:
+  - delay: 5
+    content: "\r"
+  - delay: 150
+    content: "$ "
+  - delay: 1000
+    content: s
+  - delay: 40
+    content: 'y'
+  - delay: 40
+    content: s
+  - delay: 40
+    content: l
+  - delay: 40
+    content: o
+  - delay: 40
+    content: g
+  - delay: 40
+    content: '-'
+  - delay: 40
+    content: 'n'
+  - delay: 40
+    content: g
+  - delay: 40
+    content: '-'
+  - delay: 40
+    content: c
+  - delay: 40
+    content: f
+  - delay: 40
+    content: g
+  - delay: 40
+    content: '-'
+  - delay: 40
+    content: h
+  - delay: 40
+    content: e
+  - delay: 40
+    content: l
+  - delay: 40
+    content: p
+  - delay: 40
+    content: e
+  - delay: 40
+    content: r
+  - delay: 1000
+    content: "\r\n\e[?2004l\r"
+  - delay: 0
+    content: "Valid contexts:\r\n  \e[1;31mdestination\e[0m\r\n  \e[1;31mfilter\e[0m\r\n  \e[1;31moptions\e[0m\r\n  \e[1;31mparser\e[0m\r\n  \e[1;31mrewrite\e[0m\r\n  \e[1;31msource\e[0m\r\nPrint the drivers of \e[1;31mCONTEXT\e[0m with `--context CONTEXT`.\r\n$ "
+  - delay: 3000
+    content: s
+  - delay: 40
+    content: 'y'
+  - delay: 40
+    content: s
+  - delay: 40
+    content: l
+  - delay: 40
+    content: o
+  - delay: 40
+    content: g
+  - delay: 40
+    content: '-'
+  - delay: 40
+    content: 'n'
+  - delay: 40
+    content: g
+  - delay: 40
+    content: '-'
+  - delay: 40
+    content: c
+  - delay: 40
+    content: f
+  - delay: 40
+    content: g
+  - delay: 40
+    content: '-'
+  - delay: 40
+    content: h
+  - delay: 40
+    content: e
+  - delay: 40
+    content: l
+  - delay: 40
+    content: p
+  - delay: 40
+    content: e
+  - delay: 40
+    content: r
+  - delay: 40
+    content: ' '
+  - delay: 40
+    content: '-'
+  - delay: 40
+    content: '-'
+  - delay: 40
+    content: c
+  - delay: 40
+    content: o
+  - delay: 40
+    content: 'n'
+  - delay: 40
+    content: t
+  - delay: 40
+    content: e
+  - delay: 40
+    content: x
+  - delay: 40
+    content: t
+  - delay: 40
+    content: ' '
+  - delay: 40
+    content: p
+  - delay: 40
+    content: a
+  - delay: 40
+    content: r
+  - delay: 40
+    content: s
+  - delay: 40
+    content: e
+  - delay: 40
+    content: r
+  - delay: 1000
+    content: "\r\n\e[?2004l\r"
+  - delay: 0
+    content: "Drivers of context '\e[1;31mparser\e[0m':\r\n  \e[1;34madd-contextual-data\e[0m\r\n  \e[1;34mcsv-parser\e[0m\r\n  \e[1;34mdate-parser\e[0m\r\n  \e[1;34mdb-parser\e[0m\r\n  \e[1;34mgeoip2\e[0m\r\n  \e[1;34mgroup-lines\e[0m\r\n  \e[1;34mgrouping-by\e[0m\r\n  \e[1;34mjson-parser\e[0m\r\n  \e[1;34mkv-parser\e[0m\r\n  \e[1;34mlinux-audit-parser\e[0m\r\n  \e[1;34mmap-value-pairs\e[0m\r\n  \e[1;34mmetrics-probe\e[0m\r\n  \e[1;34mopentelemetry\e[0m\r\n  \e[1;34mpython\e[0m\r\n  \e[1;34mregexp-parser\e[0m\r\n  \e[1;34msdata-parser\e[0m\r\n  \e[1;34msnmptrapd-parser\e[0m\r\n  \e[1;34msyslog-parser\e[0m\r\n  \e[1;34mtags-parser\e[0m\r\n  \e[1;34mxml\e[0m\r\nPrint the options of \e[1;34mDRIVER\e[0m with `--context parser --driver DRIVER`.\r\n$ "
+  - delay: 3000
+    content: s
+  - delay: 40
+    content: 'y'
+  - delay: 40
+    content: s
+  - delay: 40
+    content: l
+  - delay: 40
+    content: o
+  - delay: 40
+    content: g
+  - delay: 40
+    content: '-'
+  - delay: 40
+    content: 'n'
+  - delay: 40
+    content: g
+  - delay: 40
+    content: '-'
+  - delay: 40
+    content: c
+  - delay: 40
+    content: f
+  - delay: 40
+    content: g
+  - delay: 40
+    content: '-'
+  - delay: 40
+    content: h
+  - delay: 40
+    content: e
+  - delay: 40
+    content: l
+  - delay: 40
+    content: p
+  - delay: 40
+    content: e
+  - delay: 40
+    content: r
+  - delay: 40
+    content: ' '
+  - delay: 40
+    content: '-'
+  - delay: 40
+    content: '-'
+  - delay: 40
+    content: c
+  - delay: 40
+    content: o
+  - delay: 40
+    content: 'n'
+  - delay: 40
+    content: t
+  - delay: 40
+    content: e
+  - delay: 40
+    content: x
+  - delay: 40
+    content: t
+  - delay: 40
+    content: ' '
+  - delay: 40
+    content: p
+  - delay: 40
+    content: a
+  - delay: 40
+    content: r
+  - delay: 40
+    content: s
+  - delay: 40
+    content: e
+  - delay: 40
+    content: r
+  - delay: 40
+    content: ' '
+  - delay: 40
+    content: '-'
+  - delay: 40
+    content: '-'
+  - delay: 40
+    content: d
+  - delay: 40
+    content: r
+  - delay: 40
+    content: i
+  - delay: 40
+    content: v
+  - delay: 40
+    content: e
+  - delay: 40
+    content: r
+  - delay: 40
+    content: ' '
+  - delay: 40
+    content: c
+  - delay: 40
+    content: s
+  - delay: 40
+    content: v
+  - delay: 40
+    content: '-'
+  - delay: 40
+    content: p
+  - delay: 40
+    content: a
+  - delay: 40
+    content: r
+  - delay: 40
+    content: s
+  - delay: 40
+    content: e
+  - delay: 40
+    content: r
+  - delay: 1000
+    content: "\r\n\e[?2004l\r"
+  - delay: 0
+    content: "\e[1;34mcsv-parser\e[0m(\r\n    \e[1;32mcolumns\e[0m(\e[1;33m<string-list>\e[0m)\r\n    \e[1;35mdelimiters\e[0m(\r\n        \e[1;33m<empty>\e[0m\r\n        \e[1;33m<string>\e[0m\r\n        \e[1;32mchars\e[0m(\e[1;33m<string>\e[0m)\r\n        \e[1;32mstrings\e[0m(\e[1;33m<string-list>\e[0m)\r\n    )\r\n    \e[1;32mdialect\e[0m(\e[1;33m<string>\e[0m)\r\n    \e[1;32mdrop-invalid\e[0m(\e[1;33m<yesno>\e[0m)\r\n    \e[1;32mflags\e[0m(\r\n        \e[1;33m<empty>\e[0m\r\n        \e[1;33m<string>\e[0m\r\n        \e[1;33mdrop-invalid\e[0m\r\n    )\r\n    \e[1;32minternal\e[0m(\e[1;33m<yesno>\e[0m)\r\n    \e[1;32mnull\e[0m(\e[1;33m<string>\e[0m)\r\n    \e[1;32mprefix\e[0m(\e[1;33m<string>\e[0m)\r\n    \e[1;32mquote-pairs\e[0m(\e[1;33m<string>\e[0m)\r\n    \e[1;32mquotes\e[0m(\e[1;33m<string>\e[0m)\r\n    \e[1;32mtemplate\e[0m(\e[1;33m<string>\e[0m)\r\n)\r\n$ "
+  - delay: 3000
+    content: "\r$ "
