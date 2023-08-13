@@ -1,5 +1,5 @@
 from typing import Set, Tuple
-from syslog_ng_cfg_helper.driver_db import Block, Driver, Option
+from syslog_ng_cfg_helper.driver_db import Block, DriverDB, Driver, Option
 
 
 class ParseError(Exception):
@@ -125,9 +125,26 @@ def __parse_options_in_block(sentence: Tuple[str, ...], target_block: Block) -> 
         __mark_n_symbols_as_processed(processed, i, number_of_parsed_symbols)
 
 
+def __parse_common_global_options(sentence: Tuple[str, ...]) -> Driver:
+    if sentence[-1] != ";":
+        raise ParseError("Common global options sentence does not end with ';'.")
+
+    if not (sentence[1] == "{" and sentence[-2] == "}"):
+        raise ParseError("Common global options curly braces are missing.")
+
+    driver = Driver("options", DriverDB.GLOBAL_OPTIONS_DRIVER_NAME)
+    option_sentence = sentence[1:-2]
+    __parse_options_in_block(option_sentence, driver)
+
+    return driver
+
+
 def parse_sentence(sentence: Tuple[str, ...]) -> Driver:
     if len(sentence) < 4:
         raise ParseError("Too short sentence.")
+
+    if sentence[0] == "options":
+        return __parse_common_global_options(sentence)
 
     if not sentence[0].startswith("LL_CONTEXT_"):
         raise ParseError("Context is missing.")
@@ -136,10 +153,13 @@ def parse_sentence(sentence: Tuple[str, ...]) -> Driver:
         raise ParseError("Braces are missing, probably not a driver.")
 
     context = sentence[0].replace("LL_CONTEXT_", "").replace("_", "-").lower()
-    name = sentence[1]
+    if context == "options":
+        driver = Driver(context, DriverDB.GLOBAL_OPTIONS_DRIVER_NAME)
+        option_sentence = sentence[1:]
+    else:
+        driver = Driver(context, sentence[1])
+        option_sentence = sentence[3:-1]
 
-    driver = Driver(context, name)
-
-    __parse_options_in_block(sentence[3:-1], driver)
+    __parse_options_in_block(option_sentence, driver)
 
     return driver

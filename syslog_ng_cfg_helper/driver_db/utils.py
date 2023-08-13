@@ -9,6 +9,12 @@ def indent(string: str) -> str:
     return "\n".join(indented_lines)
 
 
+def unindent(string: str) -> str:
+    lines = string.split("\n")
+    unindented_lines = [line[__INDENTATION:] if line.startswith(" " * __INDENTATION) else line for line in lines]
+    return "\n".join(unindented_lines)
+
+
 def diff_indent(string: str) -> str:
     lines = string.split("\n")
     indented_lines = []

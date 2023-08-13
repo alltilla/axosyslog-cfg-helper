@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Optional
 
 from syslog_ng_cfg_helper.driver_db import DriverDB, Driver
-from syslog_ng_cfg_helper.driver_db.utils import color_red
+from syslog_ng_cfg_helper.driver_db.utils import color_red, unindent
 
 
 def colorize_context_name(name: str, colored: bool = True) -> str:
@@ -25,6 +25,15 @@ def open_db() -> DriverDB:
         driver_db = DriverDB.load(file)
 
     return driver_db
+
+
+def print_global_options(driver_db: DriverDB, colored: bool) -> None:
+    driver = driver_db.get_driver("options", DriverDB.GLOBAL_OPTIONS_DRIVER_NAME)
+    global_options_str = driver.colored_str() if colored else str(driver)
+    global_options_str = unindent(global_options_str)
+    global_options_str_lines = global_options_str.split("\n")
+
+    print("\n".join(global_options_str_lines[1:-1]))
 
 
 def print_options(driver_db: DriverDB, context_name: str, driver_name: str, colored: bool) -> None:
@@ -68,6 +77,10 @@ def print_contexts(driver_db: DriverDB, colored: bool) -> None:
 
 
 def query(driver_db: DriverDB, context: Optional[str], driver: Optional[str], colored: bool) -> None:
+    if context == "options":
+        print_global_options(driver_db, colored)
+        return
+
     if context and driver:
         print_options(driver_db, context, driver, colored)
         return

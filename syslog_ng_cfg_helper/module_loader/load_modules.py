@@ -1,6 +1,6 @@
 import re
 
-from typing import Dict, List, Set
+from typing import Dict, List, Optional, Set
 from pathlib import Path
 from neologism import DCFG, Rule
 
@@ -52,8 +52,11 @@ def __get_token_resolutions(parser_file: Path) -> Dict[str, Set[str]]:
     return resolutions
 
 
-def __resolve_tokens_to_keywords(grammar: DCFG, common_parser_file: Path, parser_file: Path) -> None:
-    parser_files: List[Path] = [common_parser_file, parser_file]
+def __resolve_tokens_to_keywords(grammar: DCFG, common_parser_file: Path, parser_file: Optional[Path] = None) -> None:
+    parser_files: List[Path] = [common_parser_file]
+    if parser_file:
+        parser_files.append(parser_file)
+
     for file in parser_files:
         for token, resolutions in __get_token_resolutions(file).items():
             for resolution in resolutions:
@@ -169,10 +172,35 @@ def __load_drivers_in_module(module_source_dir: Path, common_parser_file: Path) 
     return drivers
 
 
+def __load_common_grammar_file(lib_dir: Path, common_parser_file: Path) -> DriverDB:
+    grammar = DCFG()
+    grammar.load_yacc_file(str(lib_dir / "cfg-grammar.y"))
+    __format_types(grammar)
+    __remove_ifdef(grammar)
+    __resolve_tokens_to_keywords(grammar, common_parser_file)
+
+    driver_db = DriverDB()
+    global_options = Driver("options", DriverDB.GLOBAL_OPTIONS_DRIVER_NAME)
+    driver_db.add_driver(global_options)
+
+    for sentence in grammar.sentences:
+        if not sentence or sentence[0] != "options":
+            continue
+        try:
+            driver_slice = parse_sentence(sentence)
+            driver_db.add_driver(driver_slice)
+        except ParseError as exception:
+            print(f"    Cannot parse sentence '{' '.join(sentence)}': {exception}")
+
+    return driver_db
+
+
 def load_modules(lib_dir: Path, modules_dir: Path) -> DriverDB:
     common_parser_file = lib_dir / "cfg-parser.c"
     driver_db = DriverDB()
     module_source_dirs: List[Path] = list(filter(lambda path: path.is_dir(), modules_dir.glob("*")))
+
+    driver_db.merge(__load_common_grammar_file(lib_dir, common_parser_file))
 
     for module_source_dir in module_source_dirs:
         print(f"Loading module '{module_source_dir.name}'.")
