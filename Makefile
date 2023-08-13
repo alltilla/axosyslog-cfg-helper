@@ -34,7 +34,10 @@ style-check: black-check pylint pycodestyle
 mypy:
 	poetry run mypy $(SOURCEDIRS)
 
-linters: mypy style-check
+pyright:
+	poetry run pyright $(SOURCEDIRS)
+
+linters: mypy pyright style-check
 
 check: pytest linters
 
