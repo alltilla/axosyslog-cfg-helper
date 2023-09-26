@@ -140,7 +140,7 @@ def __connect_inner_plugins(driver_db: DriverDB) -> None:
             __remove_plugin_param_from_driver(driver)
 
             for plugin in plugins:
-                if plugin.name in EXCLUSIVE_PLUGINS.keys() and driver.name not in EXCLUSIVE_PLUGINS[plugin.name]:
+                if plugin.name in EXCLUSIVE_PLUGINS and driver.name not in EXCLUSIVE_PLUGINS[plugin.name]:
                     continue
 
                 driver.add_block(plugin.to_block())

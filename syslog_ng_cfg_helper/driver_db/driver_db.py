@@ -92,7 +92,7 @@ class DriverDB:
     def add_driver(self, driver: Driver) -> DriverDB:
         context = self.__contexts.setdefault(driver.context, {})
 
-        if driver.name in context.keys():
+        if driver.name in context:
             context[driver.name].merge(driver)
         else:
             context[driver.name] = driver.copy()
@@ -124,7 +124,7 @@ class DriverDB:
         diff = ContextDiff(context_name)
 
         for their_driver_name, their_driver in their_context.items():
-            if their_driver_name not in our_context.keys():
+            if their_driver_name not in our_context:
                 diff.removed_drivers[their_driver_name] = their_driver.copy()
                 continue
 
@@ -135,7 +135,7 @@ class DriverDB:
             diff.changed_drivers[their_driver_name] = our_driver.diff(their_driver)
 
         for our_driver_name, our_driver in our_context.items():
-            if our_driver_name not in their_context.keys():
+            if our_driver_name not in their_context:
                 diff.added_drivers[our_driver_name] = our_driver.copy()
 
         return diff
@@ -144,7 +144,7 @@ class DriverDB:
         diff = DriverDBDiff()
 
         for their_context_name, their_context in compared_to.__contexts.items():
-            if their_context_name not in self.__contexts.keys():
+            if their_context_name not in self.__contexts:
                 diff.removed_contexts[their_context_name] = their_context.copy()
                 continue
 
@@ -157,7 +157,7 @@ class DriverDB:
             )
 
         for our_context_name, our_context in self.__contexts.items():
-            if our_context_name not in compared_to.__contexts.keys():
+            if our_context_name not in compared_to.__contexts:
                 diff.added_contexts[our_context_name] = our_context.copy()
                 continue
 
