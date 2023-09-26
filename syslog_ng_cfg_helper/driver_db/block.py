@@ -108,10 +108,26 @@ class Block:
 
         return clone
 
+    def __process_option_to_block_transform_diff(
+        self,
+        their_option_name: str,
+        their_option: Option,
+        diff: BlockDiff,
+    ) -> None:
+        our_block = self.get_block(their_option_name)
+
+        their_block_from_option = Block(their_option_name)
+        their_block_from_option.add_option(Option(params=their_option.params))
+
+        diff.changed_blocks[their_option_name] = our_block.diff(their_block_from_option)
+
     def __gather_option_diffs(self, compared_to: Block, diff: BlockDiff) -> None:
         for their_option_name, their_option in compared_to.__options.items():
             if their_option_name not in self.__options.keys():
-                diff.removed_options[their_option_name] = their_option.copy()
+                if their_option_name not in self.__blocks.keys():
+                    diff.removed_options[their_option_name] = their_option.copy()
+                else:
+                    self.__process_option_to_block_transform_diff(their_option_name, their_option, diff)
                 continue
 
             our_option = self.get_option(their_option_name)
@@ -125,10 +141,26 @@ class Block:
                 diff.added_options[our_option_name] = our_option.copy()
                 continue
 
+    def __process_block_to_option_transform_diff(
+        self,
+        their_block_name: str,
+        their_block: Block,
+        diff: BlockDiff,
+    ) -> None:
+        our_option = self.get_option(their_block_name)
+
+        our_block_from_option = Block(their_block_name)
+        our_block_from_option.add_option(Option(params=our_option.params))
+
+        diff.changed_blocks[their_block_name] = our_block_from_option.diff(their_block)
+
     def __gather_block_diffs(self, compared_to: Block, diff: BlockDiff) -> None:
         for their_block_name, their_block in compared_to.__blocks.items():
             if their_block_name not in self.__blocks.keys():
-                diff.removed_blocks[their_block_name] = their_block.copy()
+                if their_block_name not in self.__options.keys():
+                    diff.removed_blocks[their_block_name] = their_block.copy()
+                else:
+                    self.__process_block_to_option_transform_diff(their_block_name, their_block, diff)
                 continue
 
             our_block = self.get_block(their_block_name)
