@@ -6,7 +6,7 @@ BISON_INSTALL_PATH := /usr/local
 SYSLOG_NG_VERSION := 4.4.0
 SYSLOG_NG_RELEASE_URL := https://github.com/syslog-ng/syslog-ng/releases/tag/syslog-ng-$(SYSLOG_NG_VERSION)
 SYSLOG_NG_TARBALL_URL := https://github.com/syslog-ng/syslog-ng/releases/download/syslog-ng-$(SYSLOG_NG_VERSION)/syslog-ng-$(SYSLOG_NG_VERSION).tar.gz
-SYSLOG_NG_SOURCE_DIR := $(ROOT_DIR)/syslog-ng
+SYSLOG_NG_TARBALL_DIR := $(ROOT_DIR)/syslog-ng
 DATABASE_FILE := $(ROOT_DIR)/syslog_ng_cfg_helper/syslog-ng-cfg-helper.db
 
 bison:
@@ -45,14 +45,14 @@ format:
 	poetry run black $(SOURCEDIRS)
 
 syslog-ng.tar.gz:
-	rm -rf $(SYSLOG_NG_SOURCE_DIR)
-	mkdir $(SYSLOG_NG_SOURCE_DIR)
-	wget $(SYSLOG_NG_TARBALL_URL) -O $(SYSLOG_NG_SOURCE_DIR).tar.gz
-	tar --strip-components=1 -C $(SYSLOG_NG_SOURCE_DIR) -xzf $(ROOT_DIR)/syslog-ng.tar.gz
+	rm -rf $(SYSLOG_NG_TARBALL_DIR)
+	mkdir $(SYSLOG_NG_TARBALL_DIR)
+	wget $(SYSLOG_NG_TARBALL_URL) -O $(SYSLOG_NG_TARBALL_DIR).tar.gz
+	tar --strip-components=1 -C $(SYSLOG_NG_TARBALL_DIR) -xzf $(ROOT_DIR)/syslog-ng.tar.gz
 
 db: syslog-ng.tar.gz
 	poetry run python $(ROOT_DIR)/syslog_ng_cfg_helper/build_db.py \
-		--source-dir=$(SYSLOG_NG_SOURCE_DIR) \
+		--source-dir=$(SYSLOG_NG_TARBALL_DIR) \
 		--output=$(DATABASE_FILE)
 
 package: db
@@ -65,5 +65,5 @@ print-syslog-ng-release-url:
 	@echo $(SYSLOG_NG_RELEASE_URL)
 
 clean:
-	rm -rf $(SYSLOG_NG_SOURCE_DIR)
-	rm -f $(SYSLOG_NG_SOURCE_DIR).tar.gz
+	rm -rf $(SYSLOG_NG_TARBALL_DIR)
+	rm -f $(SYSLOG_NG_TARBALL_DIR).tar.gz
