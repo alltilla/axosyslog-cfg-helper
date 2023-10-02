@@ -44,8 +44,7 @@ check: pytest linters
 format:
 	poetry run black $(SOURCEDIRS)
 
-syslog-ng.tar.gz:
-	rm -rf $(SYSLOG_NG_TARBALL_DIR)
+syslog-ng.tar.gz: clean
 	mkdir $(SYSLOG_NG_TARBALL_DIR)
 	wget $(SYSLOG_NG_TARBALL_URL) -O $(SYSLOG_NG_TARBALL_DIR).tar.gz
 	tar --strip-components=1 -C $(SYSLOG_NG_TARBALL_DIR) -xzf $(ROOT_DIR)/syslog-ng.tar.gz
