@@ -6,6 +6,7 @@ from syslog_ng_cfg_helper.driver_db import Driver, Block, Option
 
 
 def get_test_params() -> List[Tuple[Tuple[str, ...], Driver]]:
+    # pylint: disable=too-many-statements
     test_params: List[Tuple[Tuple[str, ...], Driver]] = []
 
     expected_0 = Driver("ctx", "driver")
@@ -220,6 +221,30 @@ def get_test_params() -> List[Tuple[Tuple[str, ...], Driver]]:
                 ")",
             ),
             expected_6,
+        )
+    )
+
+    expected_7 = Driver("ctx", "driver")
+    expected_7.add_block(Block("block"))
+    expected_7.get_block("block").add_option(Option(params={("opt", "=>", "hint", "(", "<arg>", ")")}))
+    test_params.append(
+        (
+            (
+                "LL_CONTEXT_CTX",
+                "driver",
+                "(",
+                "block",
+                "(",
+                "opt",
+                "=>",
+                "hint",
+                "(",
+                "<arg>",
+                ")",
+                ")",
+                ")",
+            ),
+            expected_7,
         )
     )
 
