@@ -28,4 +28,5 @@ EXCLUSIVE_PLUGINS = {
     "azure-auth-header": {"http"},
     "http-test-slots": {"http"},
     "tls-test-validation": {"network", "tcp", "tcp6", "syslog"},
+    "ebpf": {"udp", "udp6"},
 }
