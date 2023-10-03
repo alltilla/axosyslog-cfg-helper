@@ -30,6 +30,16 @@ def __is_block(sentence: Tuple[str, ...]) -> bool:
     raise ParseError(f"Block is not closed: {sentence}")
 
 
+def __is_arrowed_option(sentence: Tuple[str, ...]) -> bool:
+    if len(sentence) < 3:
+        return False
+
+    if sentence[1] != "=>":
+        return False
+
+    return True
+
+
 def __is_named_option(sentence: Tuple[str, ...]) -> bool:
     if len(sentence) < 3:
         return False
@@ -82,6 +92,16 @@ def __parse_block(sentence: Tuple[str, ...]) -> Tuple[Block, int]:
     return (block, number_of_processed_symbols)
 
 
+def __parse_arrowed_option(sentence: Tuple[str, ...]) -> Tuple[Option, int]:
+    if len(sentence) < 4 or sentence[3] != "(":
+        option_params = sentence[0:2]
+    else:
+        option_params = sentence[0 : sentence.index(")") + 1]
+
+    option = Option(params={option_params})
+    return (option, len(option_params))
+
+
 def __parse_named_option(sentence: Tuple[str, ...]) -> Tuple[Option, int]:
     option_name = __get_named_option_name(sentence)
     option_params = __get_named_option_params(sentence)
@@ -115,6 +135,9 @@ def __parse_options_in_block(sentence: Tuple[str, ...], target_block: Block) -> 
         if __is_block(rest_of_sentence):
             block, number_of_parsed_symbols = __parse_block(rest_of_sentence)
             target_block.add_block(block)
+        elif __is_arrowed_option(rest_of_sentence):
+            arrowed_option, number_of_parsed_symbols = __parse_arrowed_option(rest_of_sentence)
+            target_block.add_option(arrowed_option)
         elif __is_named_option(rest_of_sentence):
             named_option, number_of_parsed_symbols = __parse_named_option(rest_of_sentence)
             target_block.add_option(named_option)
