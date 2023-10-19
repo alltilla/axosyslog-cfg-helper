@@ -30,9 +30,6 @@ jobs:
 
       - name: pytest
         run: make pytest
-      
-      - name: Fetch tarball
-        run: make syslog-ng.tar.gz
 
       - name: Build DB
         run: make db
