@@ -52,6 +52,7 @@ The [Makefile](https://github.com/alltilla/syslog-ng-cfg-helper/blob/master/Make
   * `make check` runs the unit tests, style-checkers and linters.
   * `make format` formats the code.
   * `make db` downloads the syslog-ng release tarball and generates the option database.
+  * `make db SYSLOG_NG_SOURCE_DIR=/path/to/syslog-ng` creates a tarball from the state of the syslog-ng source dir and generates the option database.
   * `make package` creates the pip package.
 
 ## Community

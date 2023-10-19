@@ -6,8 +6,11 @@ BISON_INSTALL_PATH := /usr/local
 SYSLOG_NG_VERSION := 4.4.0
 SYSLOG_NG_RELEASE_URL := https://github.com/syslog-ng/syslog-ng/releases/tag/syslog-ng-$(SYSLOG_NG_VERSION)
 SYSLOG_NG_TARBALL_URL := https://github.com/syslog-ng/syslog-ng/releases/download/syslog-ng-$(SYSLOG_NG_VERSION)/syslog-ng-$(SYSLOG_NG_VERSION).tar.gz
-SYSLOG_NG_SOURCE_DIR := $(ROOT_DIR)/syslog-ng
+
 DATABASE_FILE := $(ROOT_DIR)/syslog_ng_cfg_helper/syslog-ng-cfg-helper.db
+WORKING_DIR := $(ROOT_DIR)/working-dir
+SYSLOG_NG_WORKING_DIR := $(WORKING_DIR)/syslog-ng-source
+SYSLOG_NG_TARBALL := $(WORKING_DIR)/syslog-ng.tar.gz
 
 bison:
 	wget https://ftp.gnu.org/gnu/bison/bison-3.7.6.tar.gz -O /tmp/bison.tar.gz
@@ -44,15 +47,25 @@ check: pytest linters
 format:
 	poetry run black $(SOURCEDIRS)
 
-syslog-ng.tar.gz:
-	rm -rf $(SYSLOG_NG_SOURCE_DIR)
-	mkdir $(SYSLOG_NG_SOURCE_DIR)
-	wget $(SYSLOG_NG_TARBALL_URL) -O $(SYSLOG_NG_SOURCE_DIR).tar.gz
-	tar --strip-components=1 -C $(SYSLOG_NG_SOURCE_DIR) -xzf $(ROOT_DIR)/syslog-ng.tar.gz
+$(SYSLOG_NG_TARBALL):
+	@mkdir -p $(WORKING_DIR)
+	@if [ -n "$(SYSLOG_NG_SOURCE_DIR)" ]; then \
+		echo "Generating tarball from syslog-ng source at: $(SYSLOG_NG_SOURCE_DIR)"; \
+		cd $(SYSLOG_NG_SOURCE_DIR) && \
+		$(SYSLOG_NG_SOURCE_DIR)/dbld/rules tarball; \
+		cp `ls -1t $(SYSLOG_NG_SOURCE_DIR)/dbld/build/syslog-ng-* | head -1` $(SYSLOG_NG_TARBALL); \
+	else \
+		echo "Downloading tarball from: $(SYSLOG_NG_TARBALL_URL)"; \
+		wget $(SYSLOG_NG_TARBALL_URL) -O $(SYSLOG_NG_TARBALL); \
+	fi
 
-db: syslog-ng.tar.gz
+$(SYSLOG_NG_WORKING_DIR): $(SYSLOG_NG_TARBALL)
+	@mkdir -p $(SYSLOG_NG_WORKING_DIR)
+	tar --strip-components=1 -C $(SYSLOG_NG_WORKING_DIR) -xzf $(SYSLOG_NG_TARBALL)
+
+db: $(SYSLOG_NG_WORKING_DIR)
 	poetry run python $(ROOT_DIR)/syslog_ng_cfg_helper/build_db.py \
-		--source-dir=$(SYSLOG_NG_SOURCE_DIR) \
+		--source-dir=$(SYSLOG_NG_WORKING_DIR) \
 		--output=$(DATABASE_FILE)
 
 package: db
@@ -65,5 +78,4 @@ print-syslog-ng-release-url:
 	@echo $(SYSLOG_NG_RELEASE_URL)
 
 clean:
-	rm -rf $(SYSLOG_NG_SOURCE_DIR)
-	rm -f $(SYSLOG_NG_SOURCE_DIR).tar.gz
+	rm -rf $(WORKING_DIR) $(DATABASE_FILE)
