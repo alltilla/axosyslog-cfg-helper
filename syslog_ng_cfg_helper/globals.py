@@ -16,6 +16,7 @@ TYPES = (
     ("LL_FLOAT", "<float>"),
     ("LL_IDENTIFIER", "<identifier>"),
     ("LL_PLUGIN", "<plugin>"),
+    ("LL_TEMPLATE_REF", "<template-reference>"),
 )
 
 PLUGIN_CONTEXTS = {
