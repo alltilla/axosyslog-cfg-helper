@@ -30,4 +30,5 @@ EXCLUSIVE_PLUGINS = {
     "http-test-slots": {"http"},
     "tls-test-validation": {"network", "tcp", "tcp6", "syslog"},
     "ebpf": {"udp", "udp6"},
+    "cloud-auth": {"http"},
 }
