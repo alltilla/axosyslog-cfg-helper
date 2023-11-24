@@ -2,7 +2,7 @@
 
 This tool makes configuring [syslog-ng](https://github.com/syslog-ng/syslog-ng) a bit easier by listing the options of each available driver.
 
-The options are generated from [syslog-ng v4.4.0](https://github.com/syslog-ng/syslog-ng/releases/tag/syslog-ng-4.4.0).
+The options are generated from [syslog-ng v4.5.0](https://github.com/syslog-ng/syslog-ng/releases/tag/syslog-ng-4.5.0).
 
 ## Quickstart
 
