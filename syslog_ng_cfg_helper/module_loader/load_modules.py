@@ -5,7 +5,7 @@ from pathlib import Path
 from neologism import DCFG, Rule
 
 from syslog_ng_cfg_helper.driver_db import Driver, DriverDB, Block, Option
-from syslog_ng_cfg_helper.globals import EXCLUSIVE_PLUGINS, PLUGIN_CONTEXTS, TYPES
+from syslog_ng_cfg_helper.globals import EXCLUSIVE_PLUGINS, PLUGIN_CONTEXTS, TYPES, set_string_param_choices
 from .parse_sentence import parse_sentence, ParseError
 
 
@@ -148,9 +148,10 @@ def __connect_inner_plugins(driver_db: DriverDB) -> None:
         driver_db.remove_context(plugin_context)
 
 
-def __post_process_driver_db(driver_db: DriverDB) -> None:
+def __post_process_driver_db(driver_db: DriverDB, modules_dir: Path) -> None:
     __merge_blocks_and_options_with_the_same_name(driver_db)
     __connect_inner_plugins(driver_db)
+    set_string_param_choices(driver_db, modules_dir)
 
 
 def __load_drivers_in_module(module_source_dir: Path, common_parser_file: Path) -> DriverDB:
@@ -208,6 +209,6 @@ def load_modules(lib_dir: Path, modules_dir: Path) -> DriverDB:
         drivers = __load_drivers_in_module(module_source_dir, common_parser_file)
         driver_db.merge(drivers)
 
-    __post_process_driver_db(driver_db)
+    __post_process_driver_db(driver_db, modules_dir)
 
     return driver_db

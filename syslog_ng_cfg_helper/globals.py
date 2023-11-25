@@ -1,3 +1,9 @@
+import re
+
+from pathlib import Path
+
+from .driver_db import DriverDB, Option
+
 TYPES = (
     ("nonnegative_integer", "<nonnegative-integer>"),
     ("optional_arrow", "=>"),
@@ -32,3 +38,15 @@ EXCLUSIVE_PLUGINS = {
     "ebpf": {"udp", "udp6"},
     "cloud-auth": {"http"},
 }
+
+
+def set_string_param_choices(driver_db: DriverDB, modules_dir: Path) -> None:
+    def loki() -> None:
+        driver = driver_db.get_driver("destination", "loki")
+        with Path(modules_dir, "grpc", "loki", "loki-dest.hpp").open("r", encoding="utf-8") as file:
+            set_timestamp_func = re.findall(r"  bool set_timestamp(.*?)  }", file.read().replace("\n", ""))[0]
+            timestamp_regex = re.compile(r'strcasecmp\(t, "([^"]+)"\)')
+            for timestamp in timestamp_regex.finditer(set_timestamp_func):
+                driver.add_option(Option("timestamp", {(timestamp.group(1),)}))
+
+    loki()
