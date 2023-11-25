@@ -64,6 +64,16 @@ def set_string_param_choices(driver_db: DriverDB, modules_dir: Path) -> None:
             func_pattern=r"intstateful_parser_lookup_inject_mode(.*?)}",
         )
 
+    def example_random_generator() -> None:
+        parse_strcasecmp_choice(
+            block=driver_db.get_driver("source", "example-random-generator"),
+            option_name="type",
+            source_path=Path(
+                modules_dir, "examples", "sources", "threaded-random-generator", "threaded-random-generator.c"
+            ),
+            func_pattern=r"gbooleanthreaded_random_generator_sd_set_type(.*?)}",
+        )
+
     def grouping_by() -> None:
         driver = driver_db.get_driver("parser", "grouping-by")
         parse_strcasecmp_choice(
@@ -109,6 +119,7 @@ def set_string_param_choices(driver_db: DriverDB, modules_dir: Path) -> None:
 
     amqp()
     db_parser()
+    example_random_generator()
     grouping_by()
     loki()
     snmp()
