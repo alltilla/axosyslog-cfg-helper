@@ -64,6 +64,12 @@ def set_string_param_choices(driver_db: DriverDB, modules_dir: Path) -> None:
             func_pattern=r"  bool set_timestamp(.*?)  }",
         )
 
+    def snmp() -> None:
+        driver = driver_db.get_driver("destination", "snmp")
+        driver.add_option(Option("version", {("v2c",), ("v3",)}))
+        driver.add_option(Option("auth-algorithm", {("SHA",)}))
+        driver.add_option(Option("enc-algorithm", {("AES",)}))
+
     def wildcard_file() -> None:
         parse_strcasecmp_choice(
             driver=driver_db.get_driver("source", "wildcard-file"),
@@ -74,4 +80,5 @@ def set_string_param_choices(driver_db: DriverDB, modules_dir: Path) -> None:
 
     amqp()
     loki()
+    snmp()
     wildcard_file()
