@@ -41,6 +41,14 @@ EXCLUSIVE_PLUGINS = {
 
 
 def set_string_param_choices(driver_db: DriverDB, modules_dir: Path) -> None:
+    def amqp() -> None:
+        driver = driver_db.get_driver("destination", "amqp")
+        with Path(modules_dir, "afamqp", "afamqp.c").open("r", encoding="utf-8") as file:
+            set_auth_method_func = re.findall("gbooleanafamqp_dd_set_auth_method(.*?)}", file.read().replace("\n", ""))[0]
+            auth_method_regex = re.compile(r'strcasecmp\(auth_method, "([^"]+)"\)')
+            for auth_method in auth_method_regex.finditer(set_auth_method_func):
+                driver.add_option(Option("auth-method", {(auth_method.group(1),)}))
+
     def loki() -> None:
         driver = driver_db.get_driver("destination", "loki")
         with Path(modules_dir, "grpc", "loki", "loki-dest.hpp").open("r", encoding="utf-8") as file:
@@ -49,4 +57,5 @@ def set_string_param_choices(driver_db: DriverDB, modules_dir: Path) -> None:
             for timestamp in timestamp_regex.finditer(set_timestamp_func):
                 driver.add_option(Option("timestamp", {(timestamp.group(1),)}))
 
+    amqp()
     loki()
