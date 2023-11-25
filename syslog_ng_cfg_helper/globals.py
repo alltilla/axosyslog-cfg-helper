@@ -1,6 +1,7 @@
 import re
 
 from pathlib import Path
+from typing import Optional
 
 from .driver_db import Block, DriverDB, Option
 
@@ -41,7 +42,7 @@ EXCLUSIVE_PLUGINS = {
 
 
 def set_string_param_choices(driver_db: DriverDB, modules_dir: Path) -> None:
-    def parse_strcasecmp_choice(block: Block, option_name: str, source_path: Path, func_pattern: str) -> None:
+    def parse_strcasecmp_choice(block: Block, option_name: Optional[str], source_path: Path, func_pattern: str) -> None:
         with source_path.open("r", encoding="utf-8") as file:
             func = re.findall(func_pattern, file.read().replace("\n", ""))[0]
             choice_regex = re.compile(r'strcasecmp\([^,]+, "([^"]+)"\)')
@@ -103,6 +104,14 @@ def set_string_param_choices(driver_db: DriverDB, modules_dir: Path) -> None:
             func_pattern=r"  bool set_timestamp(.*?)  }",
         )
 
+    def riemann() -> None:
+        parse_strcasecmp_choice(
+            block=driver_db.get_driver("destination", "riemann").get_block("type"),
+            option_name=None,
+            source_path=Path(modules_dir, "riemann", "riemann.c"),
+            func_pattern=r"gbooleanriemann_dd_set_connection_type(.*?)}",
+        )
+
     def snmp() -> None:
         driver = driver_db.get_driver("destination", "snmp")
         driver.add_option(Option("version", {("v2c",), ("v3",)}))
@@ -122,5 +131,6 @@ def set_string_param_choices(driver_db: DriverDB, modules_dir: Path) -> None:
     example_random_generator()
     grouping_by()
     loki()
+    riemann()
     snmp()
     wildcard_file()
