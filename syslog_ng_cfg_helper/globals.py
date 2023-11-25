@@ -2,7 +2,7 @@ import re
 
 from pathlib import Path
 
-from .driver_db import DriverDB, Option
+from .driver_db import DriverDB, Driver, Option
 
 TYPES = (
     ("nonnegative_integer", "<nonnegative-integer>"),
@@ -41,21 +41,28 @@ EXCLUSIVE_PLUGINS = {
 
 
 def set_string_param_choices(driver_db: DriverDB, modules_dir: Path) -> None:
+    def parse_strcasecmp_choice(driver: Driver, option_name: str, source_path: Path, func_pattern: str) -> None:
+        with source_path.open("r", encoding="utf-8") as file:
+            func = re.findall(func_pattern, file.read().replace("\n", ""))[0]
+            choice_regex = re.compile(r'strcasecmp\([^,]+, "([^"]+)"\)')
+            for choice in choice_regex.finditer(func):
+                driver.add_option(Option(option_name, {(choice.group(1),)}))
+
     def amqp() -> None:
-        driver = driver_db.get_driver("destination", "amqp")
-        with Path(modules_dir, "afamqp", "afamqp.c").open("r", encoding="utf-8") as file:
-            set_auth_method_func = re.findall("gbooleanafamqp_dd_set_auth_method(.*?)}", file.read().replace("\n", ""))[0]
-            auth_method_regex = re.compile(r'strcasecmp\(auth_method, "([^"]+)"\)')
-            for auth_method in auth_method_regex.finditer(set_auth_method_func):
-                driver.add_option(Option("auth-method", {(auth_method.group(1),)}))
+        parse_strcasecmp_choice(
+            driver=driver_db.get_driver("destination", "amqp"),
+            option_name="auth-method",
+            source_path=Path(modules_dir, "afamqp", "afamqp.c"),
+            func_pattern=r"gbooleanafamqp_dd_set_auth_method(.*?)}",
+        )
 
     def loki() -> None:
-        driver = driver_db.get_driver("destination", "loki")
-        with Path(modules_dir, "grpc", "loki", "loki-dest.hpp").open("r", encoding="utf-8") as file:
-            set_timestamp_func = re.findall(r"  bool set_timestamp(.*?)  }", file.read().replace("\n", ""))[0]
-            timestamp_regex = re.compile(r'strcasecmp\(t, "([^"]+)"\)')
-            for timestamp in timestamp_regex.finditer(set_timestamp_func):
-                driver.add_option(Option("timestamp", {(timestamp.group(1),)}))
+        parse_strcasecmp_choice(
+            driver=driver_db.get_driver("destination", "loki"),
+            option_name="timestamp",
+            source_path=Path(modules_dir, "grpc", "loki", "loki-dest.hpp"),
+            func_pattern=r"  bool set_timestamp(.*?)  }",
+        )
 
     amqp()
     loki()
