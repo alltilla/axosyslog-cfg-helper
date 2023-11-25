@@ -2,7 +2,7 @@ import re
 
 from pathlib import Path
 
-from .driver_db import DriverDB, Driver, Option
+from .driver_db import Block, DriverDB, Option
 
 TYPES = (
     ("nonnegative_integer", "<nonnegative-integer>"),
@@ -41,24 +41,53 @@ EXCLUSIVE_PLUGINS = {
 
 
 def set_string_param_choices(driver_db: DriverDB, modules_dir: Path) -> None:
-    def parse_strcasecmp_choice(driver: Driver, option_name: str, source_path: Path, func_pattern: str) -> None:
+    def parse_strcasecmp_choice(block: Block, option_name: str, source_path: Path, func_pattern: str) -> None:
         with source_path.open("r", encoding="utf-8") as file:
             func = re.findall(func_pattern, file.read().replace("\n", ""))[0]
             choice_regex = re.compile(r'strcasecmp\([^,]+, "([^"]+)"\)')
             for choice in choice_regex.finditer(func):
-                driver.add_option(Option(option_name, {(choice.group(1),)}))
+                block.add_option(Option(option_name, {(choice.group(1).replace("_", "-"),)}))
 
     def amqp() -> None:
         parse_strcasecmp_choice(
-            driver=driver_db.get_driver("destination", "amqp"),
+            block=driver_db.get_driver("destination", "amqp"),
             option_name="auth-method",
             source_path=Path(modules_dir, "afamqp", "afamqp.c"),
             func_pattern=r"gbooleanafamqp_dd_set_auth_method(.*?)}",
         )
 
+    def db_parser() -> None:
+        parse_strcasecmp_choice(
+            block=driver_db.get_driver("parser", "db-parser"),
+            option_name="inject-mode",
+            source_path=Path(modules_dir, "correlation", "stateful-parser.c"),
+            func_pattern=r"intstateful_parser_lookup_inject_mode(.*?)}",
+        )
+
+    def grouping_by() -> None:
+        driver = driver_db.get_driver("parser", "grouping-by")
+        parse_strcasecmp_choice(
+            block=driver,
+            option_name="inject-mode",
+            source_path=Path(modules_dir, "correlation", "stateful-parser.c"),
+            func_pattern=r"intstateful_parser_lookup_inject_mode(.*?)}",
+        )
+        parse_strcasecmp_choice(
+            block=driver.get_block("aggregate"),
+            option_name="inherit-mode",
+            source_path=Path(modules_dir, "correlation", "synthetic-message.c"),
+            func_pattern=r"intsynthetic_message_lookup_inherit_mode(.*?)}",
+        )
+        parse_strcasecmp_choice(
+            block=driver,
+            option_name="scope",
+            source_path=Path(modules_dir, "correlation", "correlation-key.c"),
+            func_pattern=r"gintcorrelation_key_lookup_scope(.*?)}",
+        )
+
     def loki() -> None:
         parse_strcasecmp_choice(
-            driver=driver_db.get_driver("destination", "loki"),
+            block=driver_db.get_driver("destination", "loki"),
             option_name="timestamp",
             source_path=Path(modules_dir, "grpc", "loki", "loki-dest.hpp"),
             func_pattern=r"  bool set_timestamp(.*?)  }",
@@ -72,13 +101,15 @@ def set_string_param_choices(driver_db: DriverDB, modules_dir: Path) -> None:
 
     def wildcard_file() -> None:
         parse_strcasecmp_choice(
-            driver=driver_db.get_driver("source", "wildcard-file"),
+            block=driver_db.get_driver("source", "wildcard-file"),
             option_name="monitor-method",
             source_path=Path(modules_dir, "affile", "directory-monitor-factory.c"),
             func_pattern=r"MonitorMethoddirectory_monitor_factory_get_monitor_method(.*?)}DirectoryMonitorConstructor",
         )
 
     amqp()
+    db_parser()
+    grouping_by()
     loki()
     snmp()
     wildcard_file()
