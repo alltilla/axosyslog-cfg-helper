@@ -64,5 +64,14 @@ def set_string_param_choices(driver_db: DriverDB, modules_dir: Path) -> None:
             func_pattern=r"  bool set_timestamp(.*?)  }",
         )
 
+    def wildcard_file() -> None:
+        parse_strcasecmp_choice(
+            driver=driver_db.get_driver("source", "wildcard-file"),
+            option_name="monitor-method",
+            source_path=Path(modules_dir, "affile", "directory-monitor-factory.c"),
+            func_pattern=r"MonitorMethoddirectory_monitor_factory_get_monitor_method(.*?)}DirectoryMonitorConstructor",
+        )
+
     amqp()
     loki()
+    wildcard_file()
