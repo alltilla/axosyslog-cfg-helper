@@ -8,6 +8,7 @@ TYPES = (
     ("string_list", "<string-list>"),
     ("string_or_number", "<string-or-number>"),
     ("template_content", "<template-content>"),
+    ("template_content_list", "<template-content-list>"),
     ("yesno", "<yesno>"),
     ("yesnoauto", "<yesnoauto>"),
     ("yesnostrict", "<yesno>"),
