@@ -1,8 +1,10 @@
 TYPES = (
+    ("nonnegative_float", "<nonnegative-float>"),
     ("nonnegative_integer", "<nonnegative-integer>"),
     ("optional_arrow", "=>"),
     ("python_yesno", "<python-yesno>"),
     ("path", "<path>"),
+    ("positive_float", "<positive-float>"),
     ("positive_integer", "<positive-integer>"),
     ("string", "<string>"),
     ("string_list", "<string-list>"),
