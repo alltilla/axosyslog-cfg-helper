@@ -4,8 +4,8 @@ SOURCEDIRS=$(ROOT_DIR)/axosyslog_cfg_helper $(ROOT_DIR)/tests
 BISON_INSTALL_PATH := /usr/local
 
 AXOSYSLOG_VERSION := 4.7.1
-AXOSYSLOG_RELEASE_URL := https://github.com/axoflow/axosyslog/releases/tag/axosyslog-$(AXOSYSLOG_VERSION)
-AXOSYSLOG_TARBALL_URL := https://github.com/axoflow/axosyslog/releases/download/axosyslog-$(AXOSYSLOG_VERSION)/axosyslog-$(AXOSYSLOG_VERSION).tar.gz
+AXOSYSLOG_RELEASE_URL := https://github.com/axoflow/axosyslog/releases/tag/syslog-ng-$(AXOSYSLOG_VERSION)
+AXOSYSLOG_TARBALL_URL := https://github.com/axoflow/axosyslog/releases/download/syslog-ng-$(AXOSYSLOG_VERSION)/syslog-ng-$(AXOSYSLOG_VERSION).tar.gz
 
 DATABASE_FILE := $(ROOT_DIR)/axosyslog_cfg_helper/axosyslog-cfg-helper.db
 WORKING_DIR := $(ROOT_DIR)/working-dir
