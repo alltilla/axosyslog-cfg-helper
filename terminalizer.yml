@@ -117,6 +117,12 @@ records:
   - delay: 150
     content: "$ "
   - delay: 1000
+    content: a
+  - delay: 40
+    content: x
+  - delay: 40
+    content: o
+  - delay: 40
     content: s
   - delay: 40
     content: 'y'
@@ -126,12 +132,6 @@ records:
     content: l
   - delay: 40
     content: o
-  - delay: 40
-    content: g
-  - delay: 40
-    content: '-'
-  - delay: 40
-    content: 'n'
   - delay: 40
     content: g
   - delay: 40
@@ -161,6 +161,12 @@ records:
   - delay: 0
     content: "Valid contexts:\r\n  \e[1;31mdestination\e[0m\r\n  \e[1;31mfilter\e[0m\r\n  \e[1;31moptions\e[0m\r\n  \e[1;31mparser\e[0m\r\n  \e[1;31mrewrite\e[0m\r\n  \e[1;31msource\e[0m\r\nPrint the drivers of \e[1;31mCONTEXT\e[0m with `--context CONTEXT`.\r\n$ "
   - delay: 3000
+    content: a
+  - delay: 40
+    content: x
+  - delay: 40
+    content: o
+  - delay: 40
     content: s
   - delay: 40
     content: 'y'
@@ -170,12 +176,6 @@ records:
     content: l
   - delay: 40
     content: o
-  - delay: 40
-    content: g
-  - delay: 40
-    content: '-'
-  - delay: 40
-    content: 'n'
   - delay: 40
     content: g
   - delay: 40
@@ -239,6 +239,12 @@ records:
   - delay: 0
     content: "Drivers of context '\e[1;31mparser\e[0m':\r\n  \e[1;34madd-contextual-data\e[0m\r\n  \e[1;34mcsv-parser\e[0m\r\n  \e[1;34mdate-parser\e[0m\r\n  \e[1;34mdb-parser\e[0m\r\n  \e[1;34mgeoip2\e[0m\r\n  \e[1;34mgroup-lines\e[0m\r\n  \e[1;34mgrouping-by\e[0m\r\n  \e[1;34mjson-parser\e[0m\r\n  \e[1;34mkv-parser\e[0m\r\n  \e[1;34mlinux-audit-parser\e[0m\r\n  \e[1;34mmap-value-pairs\e[0m\r\n  \e[1;34mmetrics-probe\e[0m\r\n  \e[1;34mopentelemetry\e[0m\r\n  \e[1;34mpython\e[0m\r\n  \e[1;34mregexp-parser\e[0m\r\n  \e[1;34msdata-parser\e[0m\r\n  \e[1;34msnmptrapd-parser\e[0m\r\n  \e[1;34msyslog-parser\e[0m\r\n  \e[1;34mtags-parser\e[0m\r\n  \e[1;34mxml\e[0m\r\nPrint the options of \e[1;34mDRIVER\e[0m with `--context parser --driver DRIVER`.\r\n$ "
   - delay: 3000
+    content: a
+  - delay: 40
+    content: x
+  - delay: 40
+    content: o
+  - delay: 40
     content: s
   - delay: 40
     content: 'y'
@@ -248,12 +254,6 @@ records:
     content: l
   - delay: 40
     content: o
-  - delay: 40
-    content: g
-  - delay: 40
-    content: '-'
-  - delay: 40
-    content: 'n'
   - delay: 40
     content: g
   - delay: 40
