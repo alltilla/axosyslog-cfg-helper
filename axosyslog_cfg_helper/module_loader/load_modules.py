@@ -4,8 +4,8 @@ from typing import Dict, List, Optional, Set
 from pathlib import Path
 from neologism import DCFG, Rule
 
-from syslog_ng_cfg_helper.driver_db import Driver, DriverDB, Block, Option
-from syslog_ng_cfg_helper.globals import EXCLUSIVE_PLUGINS, PLUGIN_CONTEXTS, TYPES
+from axosyslog_cfg_helper.driver_db import Driver, DriverDB, Block, Option
+from axosyslog_cfg_helper.globals import EXCLUSIVE_PLUGINS, PLUGIN_CONTEXTS, TYPES
 from .parse_sentence import parse_sentence, ParseError
 
 

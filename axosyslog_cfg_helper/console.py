@@ -2,8 +2,8 @@ from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from typing import Optional
 
-from syslog_ng_cfg_helper.driver_db import DriverDB, Driver
-from syslog_ng_cfg_helper.driver_db.utils import color_red, unindent
+from axosyslog_cfg_helper.driver_db import DriverDB, Driver
+from axosyslog_cfg_helper.driver_db.utils import color_red, unindent
 
 
 def colorize_context_name(name: str, colored: bool = True) -> str:
@@ -20,7 +20,7 @@ def parse_args() -> Namespace:
 
 
 def open_db() -> DriverDB:
-    db_file = Path(__file__).parent / "syslog-ng-cfg-helper.db"
+    db_file = Path(__file__).parent / "axosyslog-cfg-helper.db"
     with db_file.open("r") as file:
         driver_db = DriverDB.load(file)
 

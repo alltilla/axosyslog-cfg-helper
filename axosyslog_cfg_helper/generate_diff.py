@@ -3,7 +3,7 @@ import sys
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
-from syslog_ng_cfg_helper.driver_db import DriverDB
+from axosyslog_cfg_helper.driver_db import DriverDB
 
 
 def parse_args() -> Namespace:
@@ -13,14 +13,14 @@ def parse_args() -> Namespace:
         "-o",
         type=str,
         required=True,
-        help="Path of the old syslog-ng-cfg-helper.db file.",
+        help="Path of the old axosyslog-cfg-helper.db file.",
     )
     parser.add_argument(
         "--new-db-file",
         "-n",
         type=str,
         required=True,
-        help="Path of the new syslog-ng-cfg-helper.db file.",
+        help="Path of the new axosyslog-cfg-helper.db file.",
     )
 
     return parser.parse_args()

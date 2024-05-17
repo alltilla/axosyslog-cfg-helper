@@ -1,5 +1,5 @@
 from typing import Set, Tuple
-from syslog_ng_cfg_helper.driver_db import Block, DriverDB, Driver, Option
+from axosyslog_cfg_helper.driver_db import Block, DriverDB, Driver, Option
 
 
 class ParseError(Exception):

@@ -1,8 +1,8 @@
 from tempfile import TemporaryFile
 
-from syslog_ng_cfg_helper.driver_db.driver_db import ContextDiff, DriverDB, DriverDBDiff
-from syslog_ng_cfg_helper.driver_db.driver import Driver, DriverDiff
-from syslog_ng_cfg_helper.driver_db.option import Option
+from axosyslog_cfg_helper.driver_db.driver_db import ContextDiff, DriverDB, DriverDBDiff
+from axosyslog_cfg_helper.driver_db.driver import Driver, DriverDiff
+from axosyslog_cfg_helper.driver_db.option import Option
 
 
 def test_defaults() -> None:

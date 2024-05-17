@@ -1,16 +1,16 @@
 ROOT_DIR=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
-SOURCEDIRS=$(ROOT_DIR)/syslog_ng_cfg_helper $(ROOT_DIR)/tests
+SOURCEDIRS=$(ROOT_DIR)/axosyslog_cfg_helper $(ROOT_DIR)/tests
 
 BISON_INSTALL_PATH := /usr/local
 
-SYSLOG_NG_VERSION := 4.6.0
-SYSLOG_NG_RELEASE_URL := https://github.com/syslog-ng/syslog-ng/releases/tag/syslog-ng-$(SYSLOG_NG_VERSION)
-SYSLOG_NG_TARBALL_URL := https://github.com/syslog-ng/syslog-ng/releases/download/syslog-ng-$(SYSLOG_NG_VERSION)/syslog-ng-$(SYSLOG_NG_VERSION).tar.gz
+AXOSYSLOG_VERSION := 4.6.0
+AXOSYSLOG_RELEASE_URL := https://github.com/axoflow/axosyslog/releases/tag/axosyslog-$(AXOSYSLOG_VERSION)
+AXOSYSLOG_TARBALL_URL := https://github.com/axoflow/axosyslog/releases/download/axosyslog-$(AXOSYSLOG_VERSION)/axosyslog-$(AXOSYSLOG_VERSION).tar.gz
 
-DATABASE_FILE := $(ROOT_DIR)/syslog_ng_cfg_helper/syslog-ng-cfg-helper.db
+DATABASE_FILE := $(ROOT_DIR)/axosyslog_cfg_helper/axosyslog-cfg-helper.db
 WORKING_DIR := $(ROOT_DIR)/working-dir
-SYSLOG_NG_WORKING_DIR := $(WORKING_DIR)/syslog-ng-source
-SYSLOG_NG_TARBALL := $(WORKING_DIR)/syslog-ng.tar.gz
+AXOSYSLOG_WORKING_DIR := $(WORKING_DIR)/axosyslog-source
+AXOSYSLOG_TARBALL := $(WORKING_DIR)/axosyslog.tar.gz
 
 bison:
 	wget https://ftp.gnu.org/gnu/bison/bison-3.7.6.tar.gz -O /tmp/bison.tar.gz
@@ -47,35 +47,35 @@ check: pytest linters
 format:
 	poetry run black $(SOURCEDIRS)
 
-$(SYSLOG_NG_TARBALL):
+$(AXOSYSLOG_TARBALL):
 	@mkdir -p $(WORKING_DIR)
-	@if [ -n "$(SYSLOG_NG_SOURCE_DIR)" ]; then \
-		echo "Generating tarball from syslog-ng source at: $(SYSLOG_NG_SOURCE_DIR)"; \
-		cd $(SYSLOG_NG_SOURCE_DIR) && \
-		$(SYSLOG_NG_SOURCE_DIR)/dbld/rules tarball; \
-		cp `ls -1t $(SYSLOG_NG_SOURCE_DIR)/dbld/build/syslog-ng-* | head -1` $(SYSLOG_NG_TARBALL); \
+	@if [ -n "$(AXOSYSLOG_SOURCE_DIR)" ]; then \
+		echo "Generating tarball from axosyslog source at: $(AXOSYSLOG_SOURCE_DIR)"; \
+		cd $(AXOSYSLOG_SOURCE_DIR) && \
+		$(AXOSYSLOG_SOURCE_DIR)/dbld/rules tarball; \
+		cp `ls -1t $(AXOSYSLOG_SOURCE_DIR)/dbld/build/axosyslog-* | head -1` $(AXOSYSLOG_TARBALL); \
 	else \
-		echo "Downloading tarball from: $(SYSLOG_NG_TARBALL_URL)"; \
-		wget $(SYSLOG_NG_TARBALL_URL) -O $(SYSLOG_NG_TARBALL); \
+		echo "Downloading tarball from: $(AXOSYSLOG_TARBALL_URL)"; \
+		wget $(AXOSYSLOG_TARBALL_URL) -O $(AXOSYSLOG_TARBALL); \
 	fi
 
-$(SYSLOG_NG_WORKING_DIR): $(SYSLOG_NG_TARBALL)
-	@mkdir -p $(SYSLOG_NG_WORKING_DIR)
-	tar --strip-components=1 -C $(SYSLOG_NG_WORKING_DIR) -xzf $(SYSLOG_NG_TARBALL)
+$(AXOSYSLOG_WORKING_DIR): $(AXOSYSLOG_TARBALL)
+	@mkdir -p $(AXOSYSLOG_WORKING_DIR)
+	tar --strip-components=1 -C $(AXOSYSLOG_WORKING_DIR) -xzf $(AXOSYSLOG_TARBALL)
 
-db: $(SYSLOG_NG_WORKING_DIR)
-	poetry run python $(ROOT_DIR)/syslog_ng_cfg_helper/build_db.py \
-		--source-dir=$(SYSLOG_NG_WORKING_DIR) \
+db: $(AXOSYSLOG_WORKING_DIR)
+	poetry run python $(ROOT_DIR)/axosyslog_cfg_helper/build_db.py \
+		--source-dir=$(AXOSYSLOG_WORKING_DIR) \
 		--output=$(DATABASE_FILE)
 
 package: db
 	poetry build
 
-print-syslog-ng-version:
-	@echo $(SYSLOG_NG_VERSION)
+print-axosyslog-version:
+	@echo $(AXOSYSLOG_VERSION)
 
-print-syslog-ng-release-url:
-	@echo $(SYSLOG_NG_RELEASE_URL)
+print-axosyslog-release-url:
+	@echo $(AXOSYSLOG_RELEASE_URL)
 
 clean:
 	rm -rf $(WORKING_DIR) $(DATABASE_FILE)

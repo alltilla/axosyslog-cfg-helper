@@ -3,7 +3,7 @@ import sys
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
-from syslog_ng_cfg_helper.module_loader import load_modules
+from axosyslog_cfg_helper.module_loader import load_modules
 
 
 def parse_args() -> Namespace:
@@ -13,7 +13,7 @@ def parse_args() -> Namespace:
         "-s",
         type=str,
         required=True,
-        help="Path of the syslog-ng source directory (extracted from a release tarball).",
+        help="Path of the AxoSyslog source directory (extracted from a release tarball).",
     )
     parser.add_argument("--output", "-o", type=str, required=True, help="Output path of the database built.")
 

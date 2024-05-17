@@ -35,9 +35,9 @@ jobs:
       - name: Build DB
         run: make db
 
-      - name: Check syslog-ng-cfg-helper output
+      - name: Check axosyslog-cfg-helper output
         run: |
-          poetry run syslog-ng-cfg-helper | tee -i out.txt
+          poetry run axosyslog-cfg-helper | tee -i out.txt
           grep destination out.txt
           grep filter out.txt
           grep options out.txt

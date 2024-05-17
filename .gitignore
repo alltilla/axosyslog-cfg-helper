@@ -6,4 +6,4 @@ htmlcov/*
 dist
 
 working-dir/*
-syslog_ng_cfg_helper/syslog-ng-cfg-helper.db
+axosyslog_cfg_helper/axosyslog-cfg-helper.db

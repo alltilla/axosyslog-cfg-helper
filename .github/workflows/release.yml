@@ -51,9 +51,9 @@ jobs:
         run: |
           VERSION=$(poetry version -s)
           TITLE="${VERSION}"
-          DESCRIPTION="Generated for [syslog-ng $(make print-syslog-ng-version)]($(make print-syslog-ng-release-url))."
+          DESCRIPTION="Generated for [AxoSyslog $(make print-axosyslog-version)]($(make print-axosyslog-release-url))."
           TAG="${VERSION}"
-          TARBALL="dist/syslog_ng_cfg_helper-${VERSION}.tar.gz"
+          TARBALL="dist/axosyslog_cfg_helper-${VERSION}.tar.gz"
 
           gh release create \
             --title "${TITLE}" \

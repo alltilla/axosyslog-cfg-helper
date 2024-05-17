@@ -1,8 +1,8 @@
 from typing import List, Tuple
 import pytest
 
-from syslog_ng_cfg_helper.module_loader.parse_sentence import parse_sentence
-from syslog_ng_cfg_helper.driver_db import Driver, Block, Option
+from axosyslog_cfg_helper.module_loader.parse_sentence import parse_sentence
+from axosyslog_cfg_helper.driver_db import Driver, Block, Option
 
 
 def get_test_params() -> List[Tuple[Tuple[str, ...], Driver]]:

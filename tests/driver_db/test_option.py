@@ -3,8 +3,8 @@ from typing import Set
 import json
 import pytest
 
-from syslog_ng_cfg_helper.driver_db.exceptions import DiffException, MergeException
-from syslog_ng_cfg_helper.driver_db.option import Option, OptionDiff, Params
+from axosyslog_cfg_helper.driver_db.exceptions import DiffException, MergeException
+from axosyslog_cfg_helper.driver_db.option import Option, OptionDiff, Params
 
 
 def test_named_defaults() -> None:

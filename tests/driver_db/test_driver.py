@@ -1,10 +1,10 @@
 import json
 import pytest
 
-from syslog_ng_cfg_helper.driver_db.driver import Driver, DriverDiff
-from syslog_ng_cfg_helper.driver_db.block import Block, BlockDiff
-from syslog_ng_cfg_helper.driver_db.exceptions import DiffException, MergeException
-from syslog_ng_cfg_helper.driver_db.option import Option, OptionDiff
+from axosyslog_cfg_helper.driver_db.driver import Driver, DriverDiff
+from axosyslog_cfg_helper.driver_db.block import Block, BlockDiff
+from axosyslog_cfg_helper.driver_db.exceptions import DiffException, MergeException
+from axosyslog_cfg_helper.driver_db.option import Option, OptionDiff
 
 
 def test_defaults() -> None:

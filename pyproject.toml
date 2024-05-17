@@ -1,23 +1,23 @@
 [tool.poetry]
-name = "syslog-ng-cfg-helper"
+name = "axosyslog-cfg-helper"
 version = "1.8.1"
-description = "Configuration helper for syslog-ng."
+description = "Configuration helper for axosyslog."
 authors = ["Attila Szakacs <szakacs.attila96@gmail.com>"]
 readme = "README.md"
 license = "GPL-3.0-only"
-homepage = "https://github.com/alltilla/syslog-ng-cfg-helper"
-repository = "https://github.com/alltilla/syslog-ng-cfg-helper"
-keywords = ["syslog-ng", "configuration", "cfg"]
+homepage = "https://github.com/alltilla/axosyslog-cfg-helper"
+repository = "https://github.com/alltilla/axosyslog-cfg-helper"
+keywords = ["axosyslog", "configuration", "cfg"]
 classifiers = [
     "Environment :: Console",
     "Operating System :: OS Independent",
     "Topic :: System :: Networking",
     "Topic :: System :: Systems Administration",
 ]
-packages = [{include = "syslog_ng_cfg_helper"}]
+packages = [{include = "axosyslog_cfg_helper"}]
 include = [
     "LICENSE",
-    "syslog_ng_cfg_helper/syslog-ng-cfg-helper.db",
+    "axosyslog_cfg_helper/axosyslog-cfg-helper.db",
 ]
 
 [tool.poetry.dependencies]
@@ -41,4 +41,4 @@ line-length = 120
 exclude = "tests/module_loader/test_parse_driver.py"
 
 [tool.poetry.scripts]
-syslog-ng-cfg-helper = 'syslog_ng_cfg_helper.console:run'
+axosyslog-cfg-helper = 'axosyslog_cfg_helper.console:run'
