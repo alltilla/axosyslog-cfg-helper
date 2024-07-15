@@ -2,7 +2,7 @@
 
 This tool makes configuring [AxoSyslog](https://github.com/axoflow/axosyslog) a bit easier by listing the options of each available driver.
 
-The options are generated from [AxoSyslog v4.7.1](https://github.com/axoflow/axosyslog/releases/tag/axosyslog-4.7.1).
+The options are generated from [AxoSyslog v4.8.0](https://github.com/axoflow/axosyslog/releases/tag/axosyslog-4.8.0).
 
 ## Quickstart
 
