@@ -22,7 +22,6 @@ include = [
 
 [tool.poetry.dependencies]
 python = "^3.8"
-pyright = "^1.1.322"
 
 [tool.poetry.group.dev.dependencies]
 neologism = "^0.0.8"
@@ -32,6 +31,7 @@ black = "^23.3.0"
 pylint = "^2.17.4"
 pycodestyle = "^2.10.0"
 
+pyright = "^1.1.371"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
