@@ -27,7 +27,7 @@ python = "^3.8"
 neologism = "^0.0.8"
 pytest = "^7.2.1"
 mypy = "^1.0.1"
-black = "^23.3.0"
+black = ">=23.3,<25.0"
 pylint = "^2.17.4"
 pycodestyle = "^2.10.0"
 
