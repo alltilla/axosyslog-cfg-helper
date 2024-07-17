@@ -68,5 +68,5 @@ jobs:
       - name: mypy
         run: make mypy
 
-      - name: mypy
+      - name: pyright
         run: make pyright
