@@ -35,19 +35,28 @@ def __remove_ifdef(grammar: DCFG) -> None:
             grammar.remove_symbol(symbol)
 
 
+def __get_token_resolutions_from_struct(struct: str) -> Dict[str, Set[str]]:
+    resolutions: Dict[str, Set[str]] = {}
+    entry_regex = re.compile(r"{[^{}]+,[^{}]+}")
+
+    for entry_match in entry_regex.finditer(struct):
+        entry = entry_match.group(0)[1:-1].replace(" ", "").split(",")
+        token = entry[1]
+        keyword = entry[0][1:-1].replace("_", "-")
+        resolutions.setdefault(token, set()).add(keyword)
+
+    return resolutions
+
+
 def __get_token_resolutions(parser_file: Path) -> Dict[str, Set[str]]:
     resolutions: Dict[str, Set[str]] = {}
 
     struct_regex = re.compile(r"CfgLexerKeyword(.*?)};")
-    entry_regex = re.compile(r"{[^{}]+,[^{}]+}")
 
     with parser_file.open("r") as file:
-        for struct_match in struct_regex.finditer(file.read().replace("\n", "")):
-            for entry_match in entry_regex.finditer(struct_match.group(0)):
-                entry = entry_match.group(0)[1:-1].replace(" ", "").split(",")
-                token = entry[1]
-                keyword = entry[0][1:-1].replace("_", "-")
-                resolutions.setdefault(token, set()).add(keyword)
+        file_content = file.read().replace("\n", "")
+        for struct_match in struct_regex.finditer(file_content):
+            resolutions.update(__get_token_resolutions_from_struct(struct_match.group(1)))
 
     return resolutions
 
