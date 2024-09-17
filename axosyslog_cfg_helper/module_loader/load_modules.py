@@ -35,6 +35,18 @@ def __remove_ifdef(grammar: DCFG) -> None:
             grammar.remove_symbol(symbol)
 
 
+def __find_file_upwards(file_to_find: Path, relative_to: Path) -> Optional[Path]:
+    current_dir = relative_to
+
+    while True:
+        current_dir = current_dir.parent
+        if current_dir == Path("/"):
+            return None
+
+        for found_file in current_dir.rglob(file_to_find.name):
+            return found_file
+
+
 def __get_token_resolutions_from_struct(struct: str) -> Dict[str, Set[str]]:
     resolutions: Dict[str, Set[str]] = {}
     entry_regex = re.compile(r"{[^{}]+,[^{}]+}")
@@ -52,9 +64,23 @@ def __get_token_resolutions(parser_file: Path) -> Dict[str, Set[str]]:
     resolutions: Dict[str, Set[str]] = {}
 
     struct_regex = re.compile(r"CfgLexerKeyword(.*?)};")
+    include_regex = re.compile(r'#include (<[^>]*|"[^"]*)')
 
     with parser_file.open("r") as file:
         file_content = file.read().replace("\n", "")
+        for include_match in include_regex.finditer(file_content):
+            included_file = Path(include_match.group(1)[1:])
+            if not included_file.name.endswith("-parser.h"):
+                continue
+
+            extra_parser_file = __find_file_upwards(included_file, parser_file.parent)
+            if extra_parser_file is None:
+                print(f"      Cannot find extra parser file: {str(extra_parser_file)}.")
+                continue
+
+            extra_parser_file_content = extra_parser_file.read_text().replace("\n", "")
+            resolutions.update(__get_token_resolutions_from_struct(extra_parser_file_content))
+
         for struct_match in struct_regex.finditer(file_content):
             resolutions.update(__get_token_resolutions_from_struct(struct_match.group(1)))
 
