@@ -68,6 +68,25 @@ db: $(AXOSYSLOG_WORKING_DIR)
 		--source-dir=$(AXOSYSLOG_WORKING_DIR) \
 		--output=$(DATABASE_FILE)
 
+diff:
+	@if [ -z "$(OUTPUT)" ]; then \
+		echo "OUTPUT must be set"; \
+		false; \
+	fi
+	@mkdir -p $(WORKING_DIR)
+	rm -rf $(WORKING_DIR)/axosyslog-cfg-helper-latest $(WORKING_DIR)/axosyslog-cfg-helper-latest.tar.gz
+	wget -q \
+		$(shell curl -s https://api.github.com/repos/alltilla/axosyslog-cfg-helper/releases/latest | jq -r '.assets[] | select(.name | contains ("tar.gz")) | .browser_download_url') \
+		-O $(WORKING_DIR)/axosyslog-cfg-helper-latest.tar.gz
+	mkdir -p $(WORKING_DIR)/axosyslog-cfg-helper-latest
+	tar -xz \
+		-f $(WORKING_DIR)/axosyslog-cfg-helper-latest.tar.gz \
+		-C $(WORKING_DIR)/axosyslog-cfg-helper-latest \
+		--strip-components=1
+	poetry run python axosyslog_cfg_helper/generate_diff.py \
+		-o $(WORKING_DIR)/axosyslog-cfg-helper-latest/axosyslog_cfg_helper/axosyslog-cfg-helper.db \
+		-n $(DATABASE_FILE) > $(OUTPUT)
+
 package: db
 	poetry build
 
