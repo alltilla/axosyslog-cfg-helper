@@ -34,7 +34,7 @@ jobs:
         id: version
         run: |
           VERSION=$(poetry version -s)
-          echo "VERSION=${VERSION}\n" >> $GITHUB_OUTPUT
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Create package
         run: make package
@@ -73,7 +73,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository_owner }}/axosyslog-cfg-helper
-          tags: type=semver,pattern={{version}},value=${{ steps.version.outputs.VERSION }}
+          tags: type=semver,pattern={{version}},value=v${{ steps.version.outputs.VERSION }}
           sep-tags: ','
 
       - name: Build and push container image
