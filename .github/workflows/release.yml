@@ -46,6 +46,36 @@ jobs:
             poetry config pypi-token.pypi ${{ secrets.PYPI_API_TOKEN }}
             poetry publish
 
+      - name: Set up QEMU
+        if: github.event.inputs.target== 'PyPi'
+        uses: docker/setup-qemu-action@v3
+
+      - name: Log in to GitHub Container Registry
+        if: github.event.inputs.target== 'PyPi'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for Docker
+        if: github.event.inputs.target== 'PyPi'
+        id: docker-metadata
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/axosyslog-cfg-helper
+          tags: type=semver,pattern={{version}}
+          sep-tags: ','
+
+      - name: Build and push container image
+        if: github.event.inputs.target== 'PyPi'
+        uses: docker/build-push-action@v6
+        with:
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          push: true
+          tags: ${{ steps.docker-metadata.outputs.labels }}
+          labels: ${{ steps.docker-metadata.outputs.labels }}
+
       - name: Publish GitHub Release
         if: github.event.inputs.target== 'PyPi'
         run: |
