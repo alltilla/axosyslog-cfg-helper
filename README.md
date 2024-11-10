@@ -11,6 +11,11 @@ The options are generated from [AxoSyslog v4.8.0](https://github.com/axoflow/axo
 pipx install axosyslog-cfg-helper
 ```
 
+### Or pull the container image
+```
+docker pull ghcr.io/alltilla/axosyslog-cfg-helper
+```
+
 ### List the contexts
 ```
 axosyslog-cfg-helper
