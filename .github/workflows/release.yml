@@ -30,6 +30,12 @@ jobs:
           make bison BISON_INSTALL_PATH=/tmp/bison-install
           echo "/tmp/bison-install/bin" >> ${GITHUB_PATH}
 
+      - name: Extract version
+        id: version
+        run: |
+          VERSION=$(poetry version -s)
+          echo "VERSION=${VERSION}\n" >> $GITHUB_OUTPUT
+
       - name: Create package
         run: make package
 
@@ -64,7 +70,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository_owner }}/axosyslog-cfg-helper
-          tags: type=semver,pattern={{version}}
+          tags: type=semver,pattern={{version}},value=${{ steps.version.outputs.VERSION }}
           sep-tags: ','
 
       - name: Build and push container image
@@ -78,8 +84,9 @@ jobs:
 
       - name: Publish GitHub Release
         if: github.event.inputs.target== 'PyPi'
+        env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
         run: |
-          VERSION=$(poetry version -s)
           TITLE="${VERSION}"
           DESCRIPTION="Generated for [AxoSyslog $(make print-axosyslog-version)]($(make print-axosyslog-release-url))."
           TAG="${VERSION}"
