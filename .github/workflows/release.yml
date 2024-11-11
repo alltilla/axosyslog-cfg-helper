@@ -98,7 +98,7 @@ jobs:
           TITLE="${VERSION}"
           TAG="${VERSION}"
           TARBALL="dist/axosyslog_cfg_helper-${VERSION}.tar.gz"
-          LATEST_VERSION=$(curl -s https://api.github.com/repos/${{ github.repository_owner }}/axosyslog-cfg-helper/releases/latest | jq -r .tag_name)
+          LATEST_VERSION=$(gh api repos/${{ github.repository_owner }}/axosyslog-cfg-helper/releases/latest | jq -r .tag_name)
 
           echo "Generated for [AxoSyslog $(make print-axosyslog-version)]($(make print-axosyslog-release-url))." > description.md
           echo -n "## [${LATEST_VERSION}](https://github.com/alltilla/axosyslog-cfg-helper/releases/tag/${LATEST_VERSION})" >> description.md
