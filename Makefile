@@ -76,7 +76,7 @@ diff:
 	@mkdir -p $(WORKING_DIR)
 	rm -rf $(WORKING_DIR)/axosyslog-cfg-helper-latest $(WORKING_DIR)/axosyslog-cfg-helper-latest.tar.gz
 	wget -q \
-		$(shell curl -s https://api.github.com/repos/alltilla/axosyslog-cfg-helper/releases/latest | jq -r '.assets[] | select(.name | contains ("tar.gz")) | .browser_download_url') \
+		$(shell gh api repos/alltilla/axosyslog-cfg-helper/releases/latest | jq -r '.assets[] | select(.name | contains ("tar.gz")) | .browser_download_url') \
 		-O $(WORKING_DIR)/axosyslog-cfg-helper-latest.tar.gz
 	mkdir -p $(WORKING_DIR)/axosyslog-cfg-helper-latest
 	tar -xz \
