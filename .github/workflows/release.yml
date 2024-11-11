@@ -88,7 +88,7 @@ jobs:
 
       - name: Generate diff
         run: |
-          make OUTPUT=diff.md
+          make diff OUTPUT=diff.md
 
       - name: Publish GitHub Release
         if: github.event.inputs.target== 'PyPi'
