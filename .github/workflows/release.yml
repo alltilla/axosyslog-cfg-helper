@@ -47,68 +47,68 @@ jobs:
           poetry config pypi-token.test-pypi ${{ secrets.TEST_PYPI_API_TOKEN }}
           poetry publish -r test-pypi
 
-      - name: Publish package (pypi.org)
-        if: github.event.inputs.target== 'PyPi'
-        run: |
-            poetry config pypi-token.pypi ${{ secrets.PYPI_API_TOKEN }}
-            poetry publish
+      # - name: Publish package (pypi.org)
+      #   if: github.event.inputs.target== 'PyPi'
+      #   run: |
+      #       poetry config pypi-token.pypi ${{ secrets.PYPI_API_TOKEN }}
+      #       poetry publish
 
-      - name: Set up QEMU
-        if: github.event.inputs.target== 'PyPi'
-        uses: docker/setup-qemu-action@v3
+      # - name: Set up QEMU
+      #   if: github.event.inputs.target== 'PyPi'
+      #   uses: docker/setup-qemu-action@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      # - name: Set up Docker Buildx
+      #   uses: docker/setup-buildx-action@v3
 
-      - name: Log in to GitHub Container Registry
-        if: github.event.inputs.target== 'PyPi'
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Log in to GitHub Container Registry
+      #   if: github.event.inputs.target== 'PyPi'
+      #   uses: docker/login-action@v3
+      #   with:
+      #     registry: ghcr.io
+      #     username: ${{ github.repository_owner }}
+      #     password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata for Docker
-        if: github.event.inputs.target== 'PyPi'
-        id: docker-metadata
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository_owner }}/axosyslog-cfg-helper
-          tags: type=semver,pattern={{version}},value=v${{ steps.version.outputs.VERSION }}
-          sep-tags: ','
+      # - name: Extract metadata for Docker
+      #   if: github.event.inputs.target== 'PyPi'
+      #   id: docker-metadata
+      #   uses: docker/metadata-action@v5
+      #   with:
+      #     images: ghcr.io/${{ github.repository_owner }}/axosyslog-cfg-helper
+      #     tags: type=semver,pattern={{version}},value=v${{ steps.version.outputs.VERSION }}
+      #     sep-tags: ','
 
-      - name: Build and push container image
-        if: github.event.inputs.target== 'PyPi'
-        uses: docker/build-push-action@v6
-        with:
-          platforms: linux/amd64,linux/arm64,linux/arm/v7
-          push: true
-          tags: ${{ steps.docker-metadata.outputs.tags }}
-          labels: ${{ steps.docker-metadata.outputs.labels }}
+      # - name: Build and push container image
+      #   if: github.event.inputs.target== 'PyPi'
+      #   uses: docker/build-push-action@v6
+      #   with:
+      #     platforms: linux/amd64,linux/arm64,linux/arm/v7
+      #     push: true
+      #     tags: ${{ steps.docker-metadata.outputs.tags }}
+      #     labels: ${{ steps.docker-metadata.outputs.labels }}
 
       - name: Generate diff
         run: |
-          make diff > diff.md
+          make V=1 VERBOSE=1 diff > diff.md
 
-      - name: Publish GitHub Release
-        if: github.event.inputs.target== 'PyPi'
-        env:
-          VERSION: ${{ steps.version.outputs.VERSION }}
-        run: |
-          TITLE="${VERSION}"
-          TAG="${VERSION}"
-          TARBALL="dist/axosyslog_cfg_helper-${VERSION}.tar.gz"
-          LATEST_VERSION=$(gh api repos/${{ github.repository_owner }}/axosyslog-cfg-helper/releases/latest | jq -r .tag_name)
+      # - name: Publish GitHub Release
+      #   if: github.event.inputs.target== 'PyPi'
+      #   env:
+      #     VERSION: ${{ steps.version.outputs.VERSION }}
+      #   run: |
+      #     TITLE="${VERSION}"
+      #     TAG="${VERSION}"
+      #     TARBALL="dist/axosyslog_cfg_helper-${VERSION}.tar.gz"
+      #     LATEST_VERSION=$(gh api repos/${{ github.repository_owner }}/axosyslog-cfg-helper/releases/latest | jq -r .tag_name)
 
-          echo "Generated for [AxoSyslog $(make print-axosyslog-version)]($(make print-axosyslog-release-url))." > description.md
-          echo -n "## [${LATEST_VERSION}](https://github.com/alltilla/axosyslog-cfg-helper/releases/tag/${LATEST_VERSION})" >> description.md
-          echo " -> [${VERSION}](https://github.com/alltilla/axosyslog-cfg-helper/releases/tag/${VERSION})" >> description.md
-          echo -e "\n\x60\x60\x60diff" >> description.md
-          cat diff.md >> description.md
-          echo -e "\x60\x60\x60" >> description.md
+      #     echo "Generated for [AxoSyslog $(make print-axosyslog-version)]($(make print-axosyslog-release-url))." > description.md
+      #     echo -n "## [${LATEST_VERSION}](https://github.com/alltilla/axosyslog-cfg-helper/releases/tag/${LATEST_VERSION})" >> description.md
+      #     echo " -> [${VERSION}](https://github.com/alltilla/axosyslog-cfg-helper/releases/tag/${VERSION})" >> description.md
+      #     echo -e "\n\x60\x60\x60diff" >> description.md
+      #     cat diff.md >> description.md
+      #     echo -e "\x60\x60\x60" >> description.md
 
-          gh release create \
-            --title "${TITLE}" \
-            --notes-file - \
-            "${TAG}" \
-            "${TARBALL}" < description.md
+      #     gh release create \
+      #       --title "${TITLE}" \
+      #       --notes-file - \
+      #       "${TAG}" \
+      #       "${TARBALL}" < description.md
