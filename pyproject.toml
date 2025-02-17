@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "axosyslog-cfg-helper"
-version = "1.11.2"
+version = "1.12.0"
 description = "Configuration helper for axosyslog."
 authors = ["Attila Szakacs <szakacs.attila96@gmail.com>"]
 readme = "README.md"
