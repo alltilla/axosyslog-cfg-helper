@@ -3,7 +3,7 @@ SOURCEDIRS=$(ROOT_DIR)/axosyslog_cfg_helper $(ROOT_DIR)/tests
 
 BISON_INSTALL_PATH := /usr/local
 
-AXOSYSLOG_VERSION := 4.9.0
+AXOSYSLOG_VERSION := 4.10.0
 AXOSYSLOG_RELEASE_URL := https://github.com/axoflow/axosyslog/releases/tag/axosyslog-$(AXOSYSLOG_VERSION)
 AXOSYSLOG_TARBALL_URL := https://github.com/axoflow/axosyslog/releases/download/axosyslog-$(AXOSYSLOG_VERSION)/axosyslog-$(AXOSYSLOG_VERSION).tar.gz
 
