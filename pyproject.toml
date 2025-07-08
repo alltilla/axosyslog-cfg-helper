@@ -16,8 +16,8 @@ classifiers = [
 ]
 packages = [{include = "axosyslog_cfg_helper"}]
 include = [
-    "LICENSE",
-    "axosyslog_cfg_helper/axosyslog-cfg-helper.db",
+    { path = "LICENSE", format = ["sdist", "wheel"] },
+    { path = "axosyslog_cfg_helper/axosyslog-cfg-helper.db", format = ["sdist", "wheel"] },
 ]
 
 [tool.poetry.dependencies]
