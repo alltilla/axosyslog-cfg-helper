@@ -16,22 +16,22 @@ classifiers = [
 ]
 packages = [{include = "axosyslog_cfg_helper"}]
 include = [
-    "LICENSE",
-    "axosyslog_cfg_helper/axosyslog-cfg-helper.db",
+    { path = "LICENSE", format = ["sdist", "wheel"] },
+    { path = "axosyslog_cfg_helper/axosyslog-cfg-helper.db", format = ["sdist", "wheel"] },
 ]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 
 [tool.poetry.group.dev.dependencies]
-neologism = "^0.0.8"
-pytest = "^7.2.1"
-mypy = "^1.0.1"
-black = "^23.3.0"
-pylint = "^2.17.4"
-pycodestyle = "^2.10.0"
+neologism = "*"
+pytest = "*"
+mypy = "*"
+black = "*"
+pylint = "*"
+pycodestyle = "*"
 
-pyright = "^1.1.371"
+pyright = "*"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
