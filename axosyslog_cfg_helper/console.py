@@ -1,3 +1,5 @@
+import sys
+
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from typing import Optional
@@ -101,4 +103,5 @@ def query(driver_db: DriverDB, context: Optional[str], driver: Optional[str], co
 def run():
     args = parse_args()
     driver_db = open_db()
-    query(driver_db, args.context, args.driver, not args.no_color)
+    use_color = not args.no_color and sys.stdout.isatty()
+    query(driver_db, args.context, args.driver, use_color)
