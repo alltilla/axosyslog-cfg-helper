@@ -218,8 +218,6 @@ def test_diff_str() -> None:
 
 -driver(
 -)
-"""[
-        1:-1
-    ]
+"""[1:-1]
 
     assert str(new_driver_db.diff(old_driver_db)) == expected_str
