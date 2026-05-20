@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from axosyslog_cfg_helper.driver_db import Block, Driver, DriverDB, Option
+from axosyslog_cfg_helper.module_loader import load_scl as load_scl_mod
 from axosyslog_cfg_helper.module_loader.load_scl import (
     _parse_file,
     _scan_body,
@@ -244,8 +245,6 @@ def test_consumption_hyphen_underscore_normalized(tmp_path: Path) -> None:
 
 
 def test_hardcoded_inheritance_excludes_drop_base_options(tmp_path: Path, monkeypatch) -> None:
-    from axosyslog_cfg_helper.module_loader import load_scl as load_scl_mod
-
     monkeypatch.setattr(load_scl_mod, "SCL_INHERITANCE_EXCLUDES", {"http": {"keep-out", "secret-block"}})
     _write(
         tmp_path,
