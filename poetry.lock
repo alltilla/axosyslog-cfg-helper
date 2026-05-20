@@ -251,14 +251,14 @@ files = [
 
 [[package]]
 name = "neologism"
-version = "0.0.8"
+version = "1.0.1"
 description = "Dynamically modifiable context-free grammar written in python"
 optional = false
-python-versions = "*"
+python-versions = "<4.0,>=3.9"
 groups = ["dev"]
 files = [
-    {file = "neologism-0.0.8-py3-none-any.whl", hash = "sha256:6201d2f972f9346e00894d02e5c8cbce004352c769bdefcca0c93314925e546f"},
-    {file = "neologism-0.0.8.tar.gz", hash = "sha256:cde91c227ffec37cd25903966b472ef47d07e5bcad03ae780078f152ef780830"},
+    {file = "neologism-1.0.1-py3-none-any.whl", hash = "sha256:c602146d67f8519dcdd9b1d57841ccf98ac90f0814914c50b8b6385be8b13a7d"},
+    {file = "neologism-1.0.1.tar.gz", hash = "sha256:3f05e9f0394407b7b853e172a9c401fe2b86a3a0cb1373db6993e8421df930b0"},
 ]
 
 [package.dependencies]
