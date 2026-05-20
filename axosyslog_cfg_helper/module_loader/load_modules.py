@@ -6,6 +6,7 @@ from neologism import DCFG, Rule
 
 from axosyslog_cfg_helper.driver_db import Driver, DriverDB, Block, Option
 from axosyslog_cfg_helper.globals import EXCLUSIVE_PLUGINS, PLUGIN_CONTEXTS, TYPES
+from .load_scl import load_scl
 from .parse_sentence import parse_sentence, ParseError
 
 
@@ -297,5 +298,10 @@ def load_modules(lib_dir: Path, modules_dir: Path) -> DriverDB:
         driver_db.merge(drivers)
 
     __post_process_driver_db(driver_db)
+
+    scl_dir = lib_dir.parent / "scl"
+    if scl_dir.is_dir():
+        print(f"Loading SCL from '{scl_dir}'.")
+        driver_db.merge(load_scl(scl_dir, driver_db))
 
     return driver_db
