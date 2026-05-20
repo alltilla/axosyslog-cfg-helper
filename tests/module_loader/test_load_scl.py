@@ -233,10 +233,13 @@ def test_consumption_hyphen_underscore_normalized(tmp_path: Path) -> None:
     out = load_scl(tmp_path, grammar_db)
     driver = out.get_driver("destination", "wrap")
     option_names = {o.name for o in driver.options}
-    # Only the declared (underscore) name survives; the hyphenated source option is consumed.
-    assert "batch_lines" in option_names
-    assert "batch-lines" not in option_names
-    batch_lines = next(o for o in driver.options if o.name == "batch_lines")
+    # SCL-derived names are emitted with hyphens; the underscore declared
+    # `batch_lines` and the consumed hyphenated `batch-lines` from http
+    # collapse to a single canonical `batch-lines` option that carries the
+    # inflated type info from http.
+    assert "batch_lines" not in option_names
+    assert "batch-lines" in option_names
+    batch_lines = next(o for o in driver.options if o.name == "batch-lines")
     assert set(batch_lines.params) == {("<positive-integer>",)}
 
 

@@ -463,10 +463,12 @@ def _inflate_param(driver: Driver, param_name: str, leaf: object) -> None:
 
 
 def _build_driver(block: _SclBlock, base_driver: Optional[Driver]) -> Driver:
-    driver = Driver(block.context, block.name)
+    # Normalize underscores to hyphens on emit: axosyslog accepts both and
+    # hyphens are the convention used everywhere else in the driver DB.
+    driver = Driver(block.context, _norm(block.name))
     # Seed declared params with opaque <empty>; consumed ones get replaced.
     for param in block.params:
-        driver.add_option(Option(name=param.name, params={("<empty>",)}))
+        driver.add_option(Option(name=_norm(param.name), params={("<empty>",)}))
     if base_driver is None:
         return driver
     consumed_top, inflate = _consumption(block)
@@ -483,7 +485,7 @@ def _build_driver(block: _SclBlock, base_driver: Optional[Driver]) -> Driver:
     for param_name, path in inflate.items():
         leaf = _walk_path(base_driver, path)
         if leaf is not None:
-            _inflate_param(driver, param_name, leaf)
+            _inflate_param(driver, _norm(param_name), leaf)
     return driver
 
 
