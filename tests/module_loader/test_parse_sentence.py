@@ -71,8 +71,7 @@ def get_test_params() -> List[Tuple[Tuple[str, ...], Driver]]:
     )
 
     expected_3 = Driver("ctx", "driver")
-    expected_3.add_option(Option(params={("<positional-option-1>",)}))
-    expected_3.add_option(Option(params={("<positional-option-2>",)}))
+    expected_3.add_option(Option(params={("<positional-option-1>", "<positional-option-2>")}))
     expected_3.add_option(Option("named-option", {("<param-1>", "<param-2>")}))
     expected_3.add_option(Option(params={("<positional-option-3>",)}))
     test_params.append(
@@ -172,8 +171,9 @@ def get_test_params() -> List[Tuple[Tuple[str, ...], Driver]]:
     expected_6.add_block(Block("block-2"))
     expected_6.get_block("block-2").add_option(Option("named-option-3", {("<param-3-1>", "<param-3-2>")}))
     expected_6.get_block("block-2").add_block(Block("block-3"))
-    expected_6.get_block("block-2").get_block("block-3").add_option(Option(params={("<positional-option-3>",)}))
-    expected_6.get_block("block-2").get_block("block-3").add_option(Option(params={("<positional-option-4>",)}))
+    expected_6.get_block("block-2").get_block("block-3").add_option(
+        Option(params={("<positional-option-3>", "<positional-option-4>")})
+    )
     expected_6.get_block("block-2").get_block("block-3").add_option(Option("named-option-4", {("<empty>",)}))
     expected_6.add_option(Option("named-option-5", {("<param-5-1>", "<param-5-2>")}))
     expected_6.add_option(Option(params={("<positional-option-5>",)}))
