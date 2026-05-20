@@ -1,9 +1,11 @@
 import sys
 
-from argparse import ArgumentParser, Namespace
+from argparse import Action, ArgumentParser, Namespace
+from importlib.metadata import version as _pkg_version
 from pathlib import Path
 from typing import Optional
 
+from axosyslog_cfg_helper._axosyslog_version import AXOSYSLOG_VERSION
 from axosyslog_cfg_helper.driver_db import DriverDB, Driver
 from axosyslog_cfg_helper.driver_db.utils import color_red, unindent
 
@@ -12,11 +14,25 @@ def colorize_context_name(name: str, colored: bool = True) -> str:
     return color_red(name) if colored else name
 
 
+def format_version() -> str:
+    return f"axosyslog-cfg-helper: {_pkg_version('axosyslog-cfg-helper')}\nAxoSyslog: {AXOSYSLOG_VERSION}"
+
+
+class _PrintVersionAction(Action):
+    def __init__(self, option_strings, dest, **kwargs):
+        super().__init__(option_strings, dest, nargs=0, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        print(format_version())
+        parser.exit()
+
+
 def parse_args() -> Namespace:
     parser = ArgumentParser()
     parser.add_argument("--context", "-c", type=str, help="e.g.: destination")
     parser.add_argument("--driver", "-d", type=str, help="e.g.: http")
     parser.add_argument("--no-color", "-n", action="store_true", help="Do not color the output")
+    parser.add_argument("--version", "-V", action=_PrintVersionAction, help="Print version information and exit")
 
     return parser.parse_args()
 

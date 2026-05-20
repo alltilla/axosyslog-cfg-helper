@@ -32,6 +32,13 @@ update_readme() {
   sed -i "s/axosyslog-${old_version}/axosyslog-${new_version}/g" README.md
 }
 
+update_version_module() {
+  local old_version="$1"
+  local new_version="$2"
+
+  sed -i "s/AXOSYSLOG_VERSION = \"${old_version}\"/AXOSYSLOG_VERSION = \"${new_version}\"/g" axosyslog_cfg_helper/_axosyslog_version.py
+}
+
 main() {
   current_version=$(get_current_version)
   if [ $? -ne 0 ] || [ -z "$current_version" ]; then
@@ -54,6 +61,7 @@ main() {
 
   update_makefile "$current_version" "$latest_version"
   update_readme "$current_version" "$latest_version"
+  update_version_module "$current_version" "$latest_version"
   git commit -asm "axosyslog: generate from ${latest_version}"
 
   poetry version minor
