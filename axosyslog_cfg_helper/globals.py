@@ -42,5 +42,5 @@ EXCLUSIVE_PLUGINS = {
 # base driver. Use for low-level controls that SCL wrappers provide via
 # their own declared params or that simply don't fit the wrapper's purpose.
 SCL_INHERITANCE_EXCLUDES = {
-    "http": {"azure-auth-header", "cloud-auth"},
+    "http": {"azure-auth-header", "cloud-auth", "python-http-header"},
 }
