@@ -228,12 +228,67 @@ def __load_common_grammar_file(lib_dir: Path, common_parser_file: Path) -> Drive
     return driver_db
 
 
+def __load_sub_expr_grammar(
+    grammar_file: Path,
+    parser_file: Path,
+    common_parser_file: Path,
+    start_symbol: str,
+    context_token: str,
+) -> DriverDB:
+    """Load a sub-expression grammar (filter-expr, rewrite-expr) whose drivers are
+    enumerated under `start_symbol` and prepend `context_token` so the sentences
+    look like top-level driver sentences to parse_sentence."""
+    grammar = DCFG.from_yacc_file(grammar_file)
+    __format_types(grammar)
+    __remove_ifdef(grammar)
+    __resolve_tokens_to_keywords(grammar, common_parser_file, parser_file)
+
+    if start_symbol not in grammar.symbols:
+        print(f"    Sub-expression start symbol '{start_symbol}' not found in {grammar_file.name}.")
+        return DriverDB()
+
+    grammar.start_symbol = start_symbol
+
+    driver_db = DriverDB()
+    for sentence in grammar.sentences:
+        prefixed = (context_token,) + tuple(sentence)
+        try:
+            driver_slice = parse_sentence(prefixed)
+            driver_db.add_driver(driver_slice)
+        except ParseError:
+            continue
+
+    return driver_db
+
+
 def load_modules(lib_dir: Path, modules_dir: Path) -> DriverDB:
     common_parser_file = lib_dir / "cfg-parser.c"
     driver_db = DriverDB()
     module_source_dirs: List[Path] = list(filter(lambda path: path.is_dir(), modules_dir.glob("*")))
 
     driver_db.merge(__load_common_grammar_file(lib_dir, common_parser_file))
+
+    sub_grammars = (
+        (
+            lib_dir / "filter" / "filter-expr-grammar.y",
+            lib_dir / "filter" / "filter-expr-parser.c",
+            "filter_simple_expr",
+            "LL_CONTEXT_FILTER",
+        ),
+        (
+            lib_dir / "rewrite" / "rewrite-expr-grammar.y",
+            lib_dir / "rewrite" / "rewrite-expr-parser.c",
+            "rewrite_expr",
+            "LL_CONTEXT_REWRITE",
+        ),
+    )
+    for grammar_file, parser_file, start_symbol, context_token in sub_grammars:
+        if not grammar_file.is_file():
+            continue
+        print(f"Loading sub-grammar '{grammar_file.parent.name}'.")
+        driver_db.merge(
+            __load_sub_expr_grammar(grammar_file, parser_file, common_parser_file, start_symbol, context_token)
+        )
 
     for module_source_dir in module_source_dirs:
         print(f"Loading module '{module_source_dir.name}'.")
