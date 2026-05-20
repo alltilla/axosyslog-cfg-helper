@@ -116,7 +116,10 @@ def __parse_named_option(sentence: Tuple[str, ...]) -> Tuple[Option, int]:
 
 
 def __parse_positional_option(sentence: Tuple[str, ...]) -> Tuple[Option, int]:
-    return (Option(params={(sentence[0],)}), 1)
+    run_length = 0
+    while run_length < len(sentence) and __is_type(sentence[run_length]):
+        run_length += 1
+    return (Option(params={tuple(sentence[:run_length])}), run_length)
 
 
 def __mark_n_symbols_as_processed(processed: Set[int], start_index: int, number_of_symbols: int) -> None:

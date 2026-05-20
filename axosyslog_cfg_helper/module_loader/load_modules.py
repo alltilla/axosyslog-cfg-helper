@@ -1,6 +1,6 @@
 import re
 
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional, Set, Tuple
 from pathlib import Path
 from neologism import DCFG, Rule
 
@@ -145,17 +145,17 @@ def __accepts_plugins(driver: Driver) -> bool:
     except KeyError:
         return False
 
-    if not ("<plugin>",) in positional_option.params:
-        return False
-
-    return True
+    return any("<plugin>" in params for params in positional_option.params)
 
 
 def __remove_plugin_param_from_driver(driver: Driver) -> None:
-    new_params = set(driver.get_option(None).params)
-    new_params.remove(("<plugin>",))
+    new_params: Set[Tuple[str, ...]] = set()
+    for params in driver.get_option(None).params:
+        stripped = tuple(p for p in params if p != "<plugin>")
+        if stripped:
+            new_params.add(stripped)
     driver.remove_option(None)
-    if len(new_params) > 0:
+    if new_params:
         driver.add_option(Option(params=new_params))
 
 
