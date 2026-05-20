@@ -168,9 +168,7 @@ def test_str() -> None:
     block.add_option(Option("a-option-1", {("param-1-1", "param-1-2")}))
     block.add_option(Option("option-2", {("param-2-1", "param-2-2")}))
 
-    assert (
-        str(block)
-        == """
+    assert str(block) == """
 block(
     positional-option-1
     a-option-1(param-1-1 param-1-2)
@@ -180,7 +178,6 @@ block(
     option-2(param-2-1 param-2-2)
 )
 """.strip()
-    )
 
 
 def test_serialization() -> None:
@@ -304,8 +301,6 @@ def test_diff_str() -> None:
 +        param
      )
  )
-"""[
-        1:-1
-    ]
+"""[1:-1]
 
     assert str(new_block.diff(old_block)) == expected_str

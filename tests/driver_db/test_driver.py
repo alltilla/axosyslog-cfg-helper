@@ -103,9 +103,7 @@ def test_str() -> None:
     driver.add_option(Option(params={("positional-option-2",)}))
     driver.add_option(Option("option-name", {("param-1", "param-2")}))
 
-    assert (
-        str(driver)
-        == """
+    assert str(driver) == """
 driver(
     positional-option-2
     block(
@@ -114,7 +112,6 @@ driver(
     option-name(param-1 param-2)
 )
 """.strip()
-    )
 
 
 def test_serialization() -> None:
@@ -252,8 +249,6 @@ def test_diff_str() -> None:
 +        param
      )
  )
-"""[
-        1:-1
-    ]
+"""[1:-1]
 
     assert str(new_driver.diff(old_driver)) == expected_str

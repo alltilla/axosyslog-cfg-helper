@@ -5,7 +5,6 @@ from typing import Any, Dict, Iterable, FrozenSet, Optional, Set, Tuple
 from .exceptions import DiffException, MergeException
 from .utils import indent, color_green, color_yellow
 
-
 Params = Tuple[str, ...]
 
 
