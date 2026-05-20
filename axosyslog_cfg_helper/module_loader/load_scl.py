@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
 
 from axosyslog_cfg_helper.driver_db import Block, Driver, DriverDB, Option
+from axosyslog_cfg_helper.globals import SCL_INHERITANCE_EXCLUDES
 
 _BLOCK_CONTEXTS = {"destination", "source", "parser", "rewrite", "filter"}
 _VARARGS_TOKEN = "__VARARGS__"
@@ -469,12 +470,14 @@ def _build_driver(block: _SclBlock, base_driver: Optional[Driver]) -> Driver:
     if base_driver is None:
         return driver
     consumed_top, inflate = _consumption(block)
+    hard_excludes = {_norm(n) for n in SCL_INHERITANCE_EXCLUDES.get(block.base_driver or "", set())}
+    forbidden = consumed_top | hard_excludes
     for opt in base_driver.options:
-        if opt.name is not None and _norm(opt.name) in consumed_top:
+        if opt.name is not None and _norm(opt.name) in forbidden:
             continue
         driver.add_option(opt.copy())
     for blk in base_driver.blocks:
-        if _norm(blk.name) in consumed_top:
+        if _norm(blk.name) in forbidden:
             continue
         driver.add_block(blk.copy())
     for param_name, path in inflate.items():

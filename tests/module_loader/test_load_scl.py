@@ -240,6 +240,31 @@ def test_consumption_hyphen_underscore_normalized(tmp_path: Path) -> None:
     assert set(batch_lines.params) == {("<positive-integer>",)}
 
 
+def test_hardcoded_inheritance_excludes_drop_base_options(tmp_path: Path, monkeypatch) -> None:
+    from axosyslog_cfg_helper.module_loader import load_scl as load_scl_mod
+
+    monkeypatch.setattr(load_scl_mod, "SCL_INHERITANCE_EXCLUDES", {"http": {"keep-out", "secret-block"}})
+    _write(
+        tmp_path,
+        "x.conf",
+        "block destination wrap(only-this() ...) { http(`__VARARGS__`); };",
+    )
+    grammar_db = DriverDB()
+    http = Driver("destination", "http")
+    http.add_option(Option(name="keep-out", params={("<string>",)}))
+    http.add_option(Option(name="kept", params={("<string>",)}))
+    http.add_block(Block("secret-block"))
+    grammar_db.add_driver(http)
+    out = load_scl_mod.load_scl(tmp_path, grammar_db)
+    driver = out.get_driver("destination", "wrap")
+    option_names = {o.name for o in driver.options}
+    block_names = {b.name for b in driver.blocks}
+    assert "keep-out" not in option_names
+    assert "secret-block" not in block_names
+    assert "kept" in option_names
+    assert "only-this" in option_names
+
+
 def test_consumption_conflicting_paths_keep_consumption_drop_inflation(tmp_path: Path) -> None:
     # The declared param `x` substitutes into two different option positions in
     # the base driver. Inflation cannot pick a single target, so it is dropped

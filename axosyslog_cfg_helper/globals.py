@@ -35,3 +35,12 @@ EXCLUSIVE_PLUGINS = {
     "ebpf": {"udp", "udp6"},
     "cloud-auth": {"http"},
 }
+
+# Hardcoded exclusions applied when an SCL block inherits from its VARARGS
+# base driver. Keys are base driver names; values are the names of options
+# or sub-blocks the wrapper should NOT expose, even though they exist on the
+# base driver. Use for low-level controls that SCL wrappers provide via
+# their own declared params or that simply don't fit the wrapper's purpose.
+SCL_INHERITANCE_EXCLUDES = {
+    "http": {"azure-auth-header", "cloud-auth"},
+}
