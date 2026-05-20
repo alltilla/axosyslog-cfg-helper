@@ -1,11 +1,12 @@
 from pathlib import Path
 
-from axosyslog_cfg_helper.driver_db import Driver, DriverDB, Option
+from axosyslog_cfg_helper.driver_db import Block, Driver, DriverDB, Option
 from axosyslog_cfg_helper.module_loader.load_scl import (
-    _enclosing_driver_call,
     _parse_file,
+    _scan_body,
     _split_params,
     _strip_comments,
+    _varargs_base,
     load_scl,
 )
 
@@ -37,25 +38,37 @@ def test_split_params_nested_parens_in_default() -> None:
     assert params[1].name == "timeout"
 
 
-def test_enclosing_driver_call_simple() -> None:
-    body = "http(url(`u`) `__VARARGS__`)"
-    assert _enclosing_driver_call(body, body.index("__VARARGS__")) == "http"
+def test_varargs_base_simple() -> None:
+    refs = _scan_body("http(url(`u`) `__VARARGS__`)")
+    assert _varargs_base(refs) == "http"
 
 
-def test_enclosing_driver_call_nested() -> None:
-    body = "parser { app-parser(topic(syslog) `__VARARGS__`); };"
-    assert _enclosing_driver_call(body, body.index("__VARARGS__")) == "app-parser"
+def test_varargs_base_nested() -> None:
+    refs = _scan_body("parser { app-parser(topic(syslog) `__VARARGS__`); };")
+    assert _varargs_base(refs) == "app-parser"
 
 
-def test_enclosing_driver_call_backticked_name() -> None:
-    body = "`kafka-implementation`(`__VARARGS__`);"
+def test_varargs_base_backticked_name() -> None:
+    refs = _scan_body("`kafka-implementation`(`__VARARGS__`);")
     # backticked driver names are pattern E; treat as unresolvable
-    assert _enclosing_driver_call(body, body.index("__VARARGS__")) is None
+    assert _varargs_base(refs) is None
 
 
-def test_enclosing_driver_call_no_enclosing() -> None:
-    body = "destination { pipe(p); `__VARARGS__`; };"
-    assert _enclosing_driver_call(body, body.index("__VARARGS__")) is None
+def test_varargs_base_no_enclosing() -> None:
+    refs = _scan_body("destination { pipe(p); `__VARARGS__`; };")
+    assert _varargs_base(refs) is None
+
+
+def test_scan_body_captures_refs_with_string_state() -> None:
+    body = 'http(url("`a`/x") body(`b`) cloud-auth(azure(monitor(`c`))) `__VARARGS__`);'
+    refs = {r.name: r for r in _scan_body(body)}
+    assert refs["a"].in_string is True
+    assert refs["a"].stack == ["http", "url"]
+    assert refs["b"].in_string is False
+    assert refs["b"].stack == ["http", "body"]
+    assert refs["c"].in_string is False
+    assert refs["c"].stack == ["http", "cloud-auth", "azure", "monitor"]
+    assert refs["__VARARGS__"].stack == ["http"]
 
 
 def test_parse_file_declared_params_no_varargs(tmp_path: Path) -> None:
@@ -133,6 +146,118 @@ def test_unresolvable_block_emitted_with_declared_params_only(tmp_path: Path) ->
 def test_load_scl_missing_dir_returns_empty(tmp_path: Path) -> None:
     out = load_scl(tmp_path / "does-not-exist", DriverDB())
     assert not list(out.contexts)
+
+
+def _http_with_auth_and_url(template_params: bool = False) -> Driver:
+    """Construct a base http driver with the structure azure_monitor wraps:
+    cloud-auth(azure(monitor(app-id, app-secret, ...))), url(<string>), body(<template>).
+    """
+    http = Driver("destination", "http")
+    http.add_option(Option(name="url", params={("<string>",)}))
+    http.add_option(Option(name="body", params={("<template-content>",), ("<template-reference>",)}))
+    cloud_auth = Block("cloud-auth")
+    azure = Block("azure")
+    monitor = Block("monitor")
+    monitor.add_option(Option(name="app-id", params={("<string>",)}))
+    monitor.add_option(Option(name="app-secret", params={("<string>",)}))
+    monitor.add_option(Option(name="tenant-id", params={("<string>",)}))
+    monitor.add_option(Option(name="scope", params={("<string>",)}))
+    azure.add_block(monitor)
+    cloud_auth.add_block(azure)
+    http.add_block(cloud_auth)
+    if template_params:
+        http.add_option(Option(name="batch-lines", params={("<positive-integer>",)}))
+    return http
+
+
+def test_consumption_block_inflates_declared_param_with_subblock(tmp_path: Path) -> None:
+    _write(
+        tmp_path,
+        "x.conf",
+        "block destination wrap(auth() ...) { http(cloud-auth(azure(monitor(`auth`))) `__VARARGS__`); };",
+    )
+    grammar_db = DriverDB()
+    grammar_db.add_driver(_http_with_auth_and_url())
+    out = load_scl(tmp_path, grammar_db)
+    driver = out.get_driver("destination", "wrap")
+    block_names = {b.name for b in driver.blocks}
+    assert "auth" in block_names
+    assert "cloud-auth" not in block_names
+    auth_block = driver.get_block("auth")
+    auth_option_names = {o.name for o in auth_block.options}
+    assert auth_option_names == {"app-id", "app-secret", "tenant-id", "scope"}
+
+
+def test_consumption_option_inflates_declared_param_with_option_params(tmp_path: Path) -> None:
+    _write(
+        tmp_path,
+        "x.conf",
+        "block destination wrap(template() ...) { http(body(`template`) `__VARARGS__`); };",
+    )
+    grammar_db = DriverDB()
+    grammar_db.add_driver(_http_with_auth_and_url())
+    out = load_scl(tmp_path, grammar_db)
+    driver = out.get_driver("destination", "wrap")
+    option_names = {o.name for o in driver.options}
+    assert "template" in option_names
+    assert "body" not in option_names
+    template = next(o for o in driver.options if o.name == "template")
+    assert {("<template-content>",), ("<template-reference>",)} == set(template.params)
+
+
+def test_string_interp_consumes_enclosing_option_but_does_not_inflate(tmp_path: Path) -> None:
+    _write(
+        tmp_path,
+        "x.conf",
+        'block destination wrap(host() ...) { http(url("https://`host`/foo") `__VARARGS__`); };',
+    )
+    grammar_db = DriverDB()
+    grammar_db.add_driver(_http_with_auth_and_url())
+    out = load_scl(tmp_path, grammar_db)
+    driver = out.get_driver("destination", "wrap")
+    option_names = {o.name for o in driver.options}
+    assert "url" not in option_names
+    host = next(o for o in driver.options if o.name == "host")
+    # Stays opaque -- url could not meaningfully inflate one of several string-shared params.
+    assert set(host.params) == {("<empty>",)}
+
+
+def test_consumption_hyphen_underscore_normalized(tmp_path: Path) -> None:
+    _write(
+        tmp_path,
+        "x.conf",
+        "block destination wrap(batch_lines() ...) { http(batch-lines(`batch_lines`) `__VARARGS__`); };",
+    )
+    grammar_db = DriverDB()
+    grammar_db.add_driver(_http_with_auth_and_url(template_params=True))
+    out = load_scl(tmp_path, grammar_db)
+    driver = out.get_driver("destination", "wrap")
+    option_names = {o.name for o in driver.options}
+    # Only the declared (underscore) name survives; the hyphenated source option is consumed.
+    assert "batch_lines" in option_names
+    assert "batch-lines" not in option_names
+    batch_lines = next(o for o in driver.options if o.name == "batch_lines")
+    assert set(batch_lines.params) == {("<positive-integer>",)}
+
+
+def test_consumption_conflicting_paths_keep_consumption_drop_inflation(tmp_path: Path) -> None:
+    # The declared param `x` substitutes into two different option positions in
+    # the base driver. Inflation cannot pick a single target, so it is dropped
+    # but the consumed tops are still removed from inherited.
+    _write(
+        tmp_path,
+        "x.conf",
+        "block destination wrap(x() ...) { http(body(`x`) url(`x`) `__VARARGS__`); };",
+    )
+    grammar_db = DriverDB()
+    grammar_db.add_driver(_http_with_auth_and_url())
+    out = load_scl(tmp_path, grammar_db)
+    driver = out.get_driver("destination", "wrap")
+    option_names = {o.name for o in driver.options}
+    assert "body" not in option_names
+    assert "url" not in option_names
+    x = next(o for o in driver.options if o.name == "x")
+    assert set(x.params) == {("<empty>",)}
 
 
 def test_multiline_block_header(tmp_path: Path) -> None:

@@ -25,7 +25,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
 
-from axosyslog_cfg_helper.driver_db import Driver, DriverDB, Option
+from axosyslog_cfg_helper.driver_db import Block, Driver, DriverDB, Option
 
 _BLOCK_CONTEXTS = {"destination", "source", "parser", "rewrite", "filter"}
 _VARARGS_TOKEN = "__VARARGS__"
@@ -41,12 +41,31 @@ class _Param:
 
 
 @dataclass
+class _BacktickRef:
+    """A `name` reference encountered while scanning a block body.
+
+    `stack` records the enclosing driver-call identifiers from outermost to
+    innermost at the position of the reference. `in_string` is true when the
+    reference appears inside a string literal (e.g. interpolated into a URL
+    template). For these, the path to consume in the base driver is `stack`
+    itself; for non-string refs, the innermost frame is the option/block the
+    reference is "inside" and the SCL declared param replaces it.
+    """
+
+    name: str
+    stack: List[str]
+    in_string: bool
+
+
+@dataclass
 class _SclBlock:  # pylint: disable=too-many-instance-attributes
     context: str
     name: str
     params: List[_Param]
     has_varargs: bool
     base_driver: Optional[str]
+    body: str
+    refs: List[_BacktickRef]
     file_path: Path
     line: int
     # populated during topological resolution
@@ -165,26 +184,47 @@ def _split_params(text: str) -> List[_Param]:
     return params
 
 
-def _enclosing_driver_call(body: str, varargs_offset: int) -> Optional[str]:  # pylint: disable=too-many-branches
-    """Return the identifier preceding the innermost open paren that encloses
-    `varargs_offset`, or None if there is no enclosing driver call (e.g. a
-    bare `__VARARGS__;` statement at block level).
-
-    A forward scan up to `varargs_offset` accumulates a stack of open parens,
-    each tagged with the identifier immediately preceding it. Close parens
-    pop the stack. After the scan, the stack top is the innermost enclosing
-    call.
+def _read_ident_before(body: str, paren_index: int) -> str:
+    """Return the identifier (possibly backtick-wrapped) immediately preceding
+    the `(` at `paren_index`. Returns "" if there is none.
     """
-    paren_stack: List[Tuple[int, str]] = []  # (paren_index, preceding_identifier)
-    i = 0
-    n = varargs_offset
+    j = paren_index - 1
+    while j >= 0 and body[j].isspace():
+        j -= 1
+    if j >= 0 and body[j] == "`":
+        k = j - 1
+        while k >= 0 and body[k] != "`":
+            k -= 1
+        if k >= 0:
+            return "`" + body[k + 1 : j] + "`"
+        return ""
+    end = j + 1
+    while j >= 0 and (body[j].isalnum() or body[j] in "_-"):
+        j -= 1
+    return body[j + 1 : end]
+
+
+def _scan_body(body: str) -> List[_BacktickRef]:  # pylint: disable=too-many-branches,too-many-statements
+    """Walk `body` once and return every `name` backtick reference together
+    with the stack of enclosing driver-call identifiers at its position.
+    """
+    refs: List[_BacktickRef] = []
+    paren_stack: List[str] = []
     in_string: Optional[str] = None
+    i = 0
+    n = len(body)
     while i < n:
         ch = body[i]
         if in_string:
             if ch == "\\" and i + 1 < n:
                 i += 2
                 continue
+            if ch == "`":
+                end = body.find("`", i + 1)
+                if end > 0:
+                    refs.append(_BacktickRef(name=body[i + 1 : end], stack=list(paren_stack), in_string=True))
+                    i = end + 1
+                    continue
             if ch == in_string:
                 in_string = None
             i += 1
@@ -193,28 +233,16 @@ def _enclosing_driver_call(body: str, varargs_offset: int) -> Optional[str]:  # 
             in_string = ch
             i += 1
             continue
+        if ch == "`":
+            end = body.find("`", i + 1)
+            if end > 0:
+                refs.append(_BacktickRef(name=body[i + 1 : end], stack=list(paren_stack), in_string=False))
+                i = end + 1
+                continue
+            i += 1
+            continue
         if ch == "(":
-            # find identifier immediately preceding (skipping whitespace and
-            # backticks); identifier may be wrapped in backticks like
-            # `kafka-implementation` -- treat the backticked content as the
-            # name itself (pattern E).
-            j = i - 1
-            while j >= 0 and body[j].isspace():
-                j -= 1
-            ident: str = ""
-            if j >= 0 and body[j] == "`":
-                # backticked: read backwards to matching opening backtick
-                k = j - 1
-                while k >= 0 and body[k] != "`":
-                    k -= 1
-                if k >= 0:
-                    ident = "`" + body[k + 1 : j] + "`"
-            else:
-                end = j + 1
-                while j >= 0 and (body[j].isalnum() or body[j] in "_-"):
-                    j -= 1
-                ident = body[j + 1 : end]
-            paren_stack.append((i, ident))
+            paren_stack.append(_read_ident_before(body, i))
             i += 1
             continue
         if ch == ")":
@@ -223,14 +251,30 @@ def _enclosing_driver_call(body: str, varargs_offset: int) -> Optional[str]:  # 
             i += 1
             continue
         i += 1
-    if not paren_stack:
-        return None
-    # Innermost open paren is the last one on the stack.
-    _, name = paren_stack[-1]
-    if not name or name.startswith("`"):
-        # Pattern E (backticked) or no preceding identifier -- not resolvable.
-        return None
-    return name
+    return refs
+
+
+def _varargs_base(refs: List[_BacktickRef]) -> Optional[str]:
+    """Resolve the innermost enclosing driver call for every __VARARGS__ ref
+    in `refs`. Returns the call's identifier if all occurrences agree, or
+    None if there is no enclosing call or the occurrences disagree.
+    """
+    base: Optional[str] = None
+    seen = False
+    for ref in refs:
+        if ref.name != _VARARGS_TOKEN:
+            continue
+        seen = True
+        if not ref.stack:
+            return None
+        innermost = ref.stack[-1]
+        if not innermost or innermost.startswith("`"):
+            return None
+        if base is None:
+            base = innermost
+        elif base != innermost:
+            return None
+    return base if seen else None
 
 
 def _parse_file(path: Path) -> List[_SclBlock]:  # pylint: disable=too-many-branches,too-many-locals,too-many-statements
@@ -299,18 +343,9 @@ def _parse_file(path: Path) -> List[_SclBlock]:  # pylint: disable=too-many-bran
         else:
             next_pos = params_close + 1
 
-        has_varargs = _VARARGS_TOKEN in body_text
-        base_driver: Optional[str] = None
-        if has_varargs:
-            base_driver = _enclosing_driver_call(body_text, body_text.find(_VARARGS_TOKEN))
-            # Validate that *every* VARARGS occurrence resolves to the same base.
-            scan = body_text.find(_VARARGS_TOKEN, body_text.find(_VARARGS_TOKEN) + 1)
-            while scan >= 0:
-                other = _enclosing_driver_call(body_text, scan)
-                if other != base_driver:
-                    base_driver = None
-                    break
-                scan = body_text.find(_VARARGS_TOKEN, scan + 1)
+        refs = _scan_body(body_text)
+        has_varargs = any(ref.name == _VARARGS_TOKEN for ref in refs)
+        base_driver = _varargs_base(refs) if has_varargs else None
 
         # Compute line number of the block keyword for diagnostics
         line_no = text.count("\n", 0, idx) + 1
@@ -321,6 +356,8 @@ def _parse_file(path: Path) -> List[_SclBlock]:  # pylint: disable=too-many-bran
                 params=params,
                 has_varargs=has_varargs,
                 base_driver=base_driver,
+                body=body_text,
+                refs=refs,
                 file_path=path,
                 line=line_no,
             )
@@ -329,13 +366,121 @@ def _parse_file(path: Path) -> List[_SclBlock]:  # pylint: disable=too-many-bran
     return blocks
 
 
-def _block_to_driver(block: _SclBlock) -> Driver:
+def _norm(name: str) -> str:
+    """Normalize a name for hyphen/underscore-insensitive comparison."""
+    return name.replace("_", "-")
+
+
+def _find_block(node: Block, name: str) -> Optional[Block]:
+    norm = _norm(name)
+    return next((b for b in node.blocks if _norm(b.name) == norm), None)
+
+
+def _find_option(node: Block, name: str) -> Optional[Option]:
+    norm = _norm(name)
+    return next((o for o in node.options if o.name and _norm(o.name) == norm), None)
+
+
+def _walk_path(base: Block, path: List[str]) -> Optional[object]:
+    """Walk `path` inside `base`. Each segment is matched against sub-blocks
+    first, then options. Returns the leaf Block or Option, or None if the
+    path cannot be fully resolved.
+    """
+    node: Block = base
+    for idx, seg in enumerate(path):
+        nb = _find_block(node, seg)
+        if nb is not None:
+            node = nb
+            if idx == len(path) - 1:
+                return nb
+            continue
+        no = _find_option(node, seg)
+        if no is not None:
+            if idx == len(path) - 1:
+                return no
+            return None  # options cannot have sub-things
+        return None
+    return node
+
+
+def _consumption(block: _SclBlock) -> Tuple[Set[str], Dict[str, List[str]]]:
+    """Inspect a block's backtick references and decide which top-level options
+    or sub-blocks of the VARARGS base driver are consumed by declared params.
+
+    Returns (consumed_top_names_normalized, inflate_paths_by_param). Params
+    that appear inside string literals contribute to consumption (the string-
+    bearing option is hidden) but not to inflation. Params with conflicting
+    references (same name pointing into multiple distinct paths) are dropped
+    from inflation but their consumed tops are kept.
+    """
+    declared_names = {p.name for p in block.params}
+    consumed_top: Set[str] = set()
+    inflate: Dict[str, List[str]] = {}
+    conflict: Set[str] = set()
+    base = block.base_driver
+    if base is None:
+        return consumed_top, inflate
+    for ref in block.refs:
+        if ref.name == _VARARGS_TOKEN or ref.name not in declared_names:
+            continue
+        if not ref.stack or ref.stack[0] != base:
+            continue
+        path_in_base = ref.stack[1:]
+        if not path_in_base:
+            continue
+        consumed_top.add(_norm(path_in_base[0]))
+        if ref.in_string:
+            continue
+        if ref.name in inflate and inflate[ref.name] != path_in_base:
+            conflict.add(ref.name)
+        else:
+            inflate[ref.name] = path_in_base
+    for name in conflict:
+        inflate.pop(name, None)
+    return consumed_top, inflate
+
+
+def _inflate_param(driver: Driver, param_name: str, leaf: object) -> None:
+    """Replace declared `param_name` option with content derived from `leaf`."""
+    if isinstance(leaf, Block):
+        try:
+            driver.remove_option(param_name)
+        except KeyError:
+            pass
+        new_block = Block(param_name)
+        for o in leaf.options:
+            new_block.add_option(o.copy())
+        for b in leaf.blocks:
+            new_block.add_block(b.copy())
+        driver.add_block(new_block)
+    elif isinstance(leaf, Option):
+        try:
+            driver.remove_option(param_name)
+        except KeyError:
+            pass
+        driver.add_option(Option(name=param_name, params=set(leaf.params)))
+
+
+def _build_driver(block: _SclBlock, base_driver: Optional[Driver]) -> Driver:
     driver = Driver(block.context, block.name)
+    # Seed declared params with opaque <empty>; consumed ones get replaced.
     for param in block.params:
-        # Convert hyphen/underscore unchanged (axosyslog accepts both); use
-        # `<empty>` to match the convention used by the grammar loader.
-        param_value: Tuple[str, ...] = ("<empty>",)
-        driver.add_option(Option(name=param.name, params={param_value}))
+        driver.add_option(Option(name=param.name, params={("<empty>",)}))
+    if base_driver is None:
+        return driver
+    consumed_top, inflate = _consumption(block)
+    for opt in base_driver.options:
+        if opt.name is not None and _norm(opt.name) in consumed_top:
+            continue
+        driver.add_option(opt.copy())
+    for blk in base_driver.blocks:
+        if _norm(blk.name) in consumed_top:
+            continue
+        driver.add_block(blk.copy())
+    for param_name, path in inflate.items():
+        leaf = _walk_path(base_driver, path)
+        if leaf is not None:
+            _inflate_param(driver, param_name, leaf)
     return driver
 
 
@@ -348,10 +493,9 @@ def _resolve(blocks: List[_SclBlock], grammar_db: DriverDB) -> DriverDB:
         if key in stack:
             print(f"    SCL cycle detected at {block.file_path}:{block.line} for {key}")
             return None
-        driver = _block_to_driver(block)
+        base_driver: Optional[Driver] = None
         if block.has_varargs and block.base_driver:
             base_key = (block.context, block.base_driver)
-            base_driver: Optional[Driver] = None
             if base_key in by_key:
                 base_driver = resolve(by_key[base_key], stack | {key})
             else:
@@ -359,12 +503,7 @@ def _resolve(blocks: List[_SclBlock], grammar_db: DriverDB) -> DriverDB:
                     base_driver = grammar_db.get_driver(block.context, block.base_driver)
                 except KeyError:
                     base_driver = None
-            if base_driver is not None:
-                for opt in base_driver.options:
-                    driver.add_option(opt.copy())
-                for blk in base_driver.blocks:
-                    driver.add_block(blk.copy())
-            else:
+            if base_driver is None:
                 print(
                     f"    SCL block {block.context}/{block.name} at "
                     f"{block.file_path}:{block.line}: base driver {block.base_driver!r} not found"
@@ -374,6 +513,7 @@ def _resolve(blocks: List[_SclBlock], grammar_db: DriverDB) -> DriverDB:
                 f"    SCL block {block.context}/{block.name} at {block.file_path}:{block.line}: "
                 f"__VARARGS__ present but base driver not resolvable; emitting declared params only"
             )
+        driver = _build_driver(block, base_driver)
         out.add_driver(driver)
         block.resolved = True
         return driver
