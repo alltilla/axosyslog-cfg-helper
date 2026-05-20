@@ -104,8 +104,7 @@ def __prepare_module_grammar(module_source_dir: Path, common_parser_file: Path) 
     for grammar_file in __find_grammar_files(module_source_dir):
         parser_file = Path(str(grammar_file).replace("-grammar.y", "-parser.c"))
 
-        grammar = DCFG()
-        grammar.load_yacc_file(str(grammar_file))
+        grammar = DCFG.from_yacc_file(grammar_file)
 
         __format_types(grammar)
         __remove_ifdef(grammar)
@@ -208,8 +207,7 @@ def __load_drivers_in_module(module_source_dir: Path, common_parser_file: Path) 
 
 
 def __load_common_grammar_file(lib_dir: Path, common_parser_file: Path) -> DriverDB:
-    grammar = DCFG()
-    grammar.load_yacc_file(str(lib_dir / "cfg-grammar.y"))
+    grammar = DCFG.from_yacc_file(lib_dir / "cfg-grammar.y")
     __format_types(grammar)
     __remove_ifdef(grammar)
     __resolve_tokens_to_keywords(grammar, common_parser_file)
