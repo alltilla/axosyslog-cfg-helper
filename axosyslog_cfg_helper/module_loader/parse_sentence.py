@@ -40,6 +40,49 @@ def __is_arrowed_option(sentence: Tuple[str, ...]) -> bool:
     return True
 
 
+def __toplevel_arrow_index(sentence: Tuple[str, ...]) -> int:
+    depth = 0
+    for index, symbol in enumerate(sentence):
+        if symbol == "(":
+            depth += 1
+        elif symbol == ")":
+            if depth == 0:
+                return -1
+            depth -= 1
+        elif symbol == "=>" and depth == 0:
+            return index
+
+    return -1
+
+
+def __arrowed_lhs_is_single_field(lhs: Tuple[str, ...]) -> bool:
+    if "(" not in lhs:
+        return True
+
+    open_index = lhs.index("(")
+    if ")" in lhs[:open_index]:
+        return False
+
+    depth = 0
+    for index in range(open_index, len(lhs)):
+        if lhs[index] == "(":
+            depth += 1
+        elif lhs[index] == ")":
+            depth -= 1
+            if depth == 0:
+                return index == len(lhs) - 1
+
+    return False
+
+
+def __is_multi_token_arrowed_option(sentence: Tuple[str, ...]) -> bool:
+    arrow_index = __toplevel_arrow_index(sentence)
+    if arrow_index < 2:
+        return False
+
+    return __arrowed_lhs_is_single_field(sentence[:arrow_index])
+
+
 def __is_named_option(sentence: Tuple[str, ...]) -> bool:
     if len(sentence) < 3:
         return False
@@ -102,6 +145,18 @@ def __parse_arrowed_option(sentence: Tuple[str, ...]) -> Tuple[Option, int]:
     return (option, len(option_params))
 
 
+def __parse_multi_token_arrowed_option(sentence: Tuple[str, ...]) -> Tuple[Option, int]:
+    arrow_index = __toplevel_arrow_index(sentence)
+
+    if len(sentence) > arrow_index + 2 and sentence[arrow_index + 2] == "(":
+        end = sentence.index(")", arrow_index + 2) + 1
+    else:
+        end = arrow_index + 2
+
+    option_params = sentence[0:end]
+    return (Option(params={option_params}), len(option_params))
+
+
 def __parse_named_option(sentence: Tuple[str, ...]) -> Tuple[Option, int]:
     option_name = __get_named_option_name(sentence)
     option_params = __get_named_option_params(sentence)
@@ -135,7 +190,10 @@ def __parse_options_in_block(sentence: Tuple[str, ...], target_block: Block) -> 
 
         number_of_parsed_symbols = 0
         rest_of_sentence = sentence[i:]
-        if __is_block(rest_of_sentence):
+        if __is_multi_token_arrowed_option(rest_of_sentence):
+            arrowed_option, number_of_parsed_symbols = __parse_multi_token_arrowed_option(rest_of_sentence)
+            target_block.add_option(arrowed_option)
+        elif __is_block(rest_of_sentence):
             block, number_of_parsed_symbols = __parse_block(rest_of_sentence)
             target_block.add_block(block)
         elif __is_arrowed_option(rest_of_sentence):
