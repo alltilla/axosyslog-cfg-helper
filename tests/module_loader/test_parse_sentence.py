@@ -248,6 +248,34 @@ def get_test_params() -> List[Tuple[Tuple[str, ...], Driver]]:
         )
     )
 
+    expected_8 = Driver("ctx", "driver")
+    expected_8.add_block(Block("schema"))
+    expected_8.get_block("schema").add_option(
+        Option(params={("<string>", "MAP", "(", "STRING", "STRING", ")", "=>", "<template-content>")})
+    )
+    test_params.append(
+        (
+            (
+                "LL_CONTEXT_CTX",
+                "driver",
+                "(",
+                "schema",
+                "(",
+                "<string>",
+                "MAP",
+                "(",
+                "STRING",
+                "STRING",
+                ")",
+                "=>",
+                "<template-content>",
+                ")",
+                ")",
+            ),
+            expected_8,
+        )
+    )
+
     return test_params
 
 
