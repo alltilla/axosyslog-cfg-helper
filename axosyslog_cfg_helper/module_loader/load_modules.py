@@ -1,6 +1,6 @@
 import re
 
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Sequence, Set, Tuple
 from pathlib import Path
 from neologism import DCFG, Rule
 
@@ -48,6 +48,16 @@ def __find_file_upwards(file_to_find: Path, relative_to: Path) -> Optional[Path]
             return found_file
 
 
+def __find_included_file(included_file: Path, including_file: Path, include_dirs: Sequence[Path]) -> Optional[Path]:
+    for include_dir in (including_file.parent, *include_dirs):
+        candidate = include_dir / included_file
+        if candidate.is_file():
+            return candidate
+
+    # Modules can add include directories of their own (modules/grpc/common), which are unknown here.
+    return __find_file_upwards(included_file, including_file.parent)
+
+
 def __get_token_resolutions_from_struct(struct: str) -> Dict[str, Set[str]]:
     resolutions: Dict[str, Set[str]] = {}
     entry_regex = re.compile(r"{[^{}]+,[^{}]+}")
@@ -61,7 +71,7 @@ def __get_token_resolutions_from_struct(struct: str) -> Dict[str, Set[str]]:
     return resolutions
 
 
-def __get_token_resolutions(parser_file: Path) -> Dict[str, Set[str]]:
+def __get_token_resolutions(parser_file: Path, include_dirs: Sequence[Path]) -> Dict[str, Set[str]]:
     resolutions: Dict[str, Set[str]] = {}
 
     struct_regex = re.compile(r"CfgLexerKeyword(.*?)};")
@@ -74,7 +84,7 @@ def __get_token_resolutions(parser_file: Path) -> Dict[str, Set[str]]:
             if not included_file.name.endswith("-parser.h"):
                 continue
 
-            extra_parser_file = __find_file_upwards(included_file, parser_file.parent)
+            extra_parser_file = __find_included_file(included_file, parser_file, include_dirs)
             if extra_parser_file is None:
                 print(f"      Cannot find extra parser file: {str(extra_parser_file)}.")
                 continue
@@ -88,18 +98,23 @@ def __get_token_resolutions(parser_file: Path) -> Dict[str, Set[str]]:
     return resolutions
 
 
-def __resolve_tokens_to_keywords(grammar: DCFG, common_parser_file: Path, parser_file: Optional[Path] = None) -> None:
+def __resolve_tokens_to_keywords(
+    grammar: DCFG,
+    common_parser_file: Path,
+    include_dirs: Sequence[Path],
+    parser_file: Optional[Path] = None,
+) -> None:
     parser_files: List[Path] = [common_parser_file]
     if parser_file:
         parser_files.append(parser_file)
 
     for file in parser_files:
-        for token, resolutions in __get_token_resolutions(file).items():
+        for token, resolutions in __get_token_resolutions(file, include_dirs).items():
             for resolution in resolutions:
                 grammar.add_rule(Rule(token, (resolution,)))
 
 
-def __prepare_module_grammar(module_source_dir: Path, common_parser_file: Path) -> DCFG:
+def __prepare_module_grammar(module_source_dir: Path, common_parser_file: Path, include_dirs: Sequence[Path]) -> DCFG:
     module_grammar = DCFG()
 
     for grammar_file in __find_grammar_files(module_source_dir):
@@ -109,7 +124,7 @@ def __prepare_module_grammar(module_source_dir: Path, common_parser_file: Path) 
 
         __format_types(grammar)
         __remove_ifdef(grammar)
-        __resolve_tokens_to_keywords(grammar, common_parser_file, parser_file)
+        __resolve_tokens_to_keywords(grammar, common_parser_file, include_dirs, parser_file)
 
         module_grammar.load_dcfg(grammar)
         module_grammar.start_symbol = grammar.start_symbol
@@ -188,11 +203,13 @@ def __post_process_driver_db(driver_db: DriverDB) -> None:
     __connect_inner_plugins(driver_db)
 
 
-def __load_drivers_in_module(module_source_dir: Path, common_parser_file: Path) -> DriverDB:
+def __load_drivers_in_module(
+    module_source_dir: Path, common_parser_file: Path, include_dirs: Sequence[Path]
+) -> DriverDB:
     drivers = DriverDB()
 
     try:
-        grammar = __prepare_module_grammar(module_source_dir, common_parser_file)
+        grammar = __prepare_module_grammar(module_source_dir, common_parser_file, include_dirs)
     except GrammarFileMissingError:
         print("    Skipping module: Grammar file is missing.")
         return DriverDB()
@@ -207,11 +224,11 @@ def __load_drivers_in_module(module_source_dir: Path, common_parser_file: Path) 
     return drivers
 
 
-def __load_common_grammar_file(lib_dir: Path, common_parser_file: Path) -> DriverDB:
+def __load_common_grammar_file(lib_dir: Path, common_parser_file: Path, include_dirs: Sequence[Path]) -> DriverDB:
     grammar = DCFG.from_yacc_file(lib_dir / "cfg-grammar.y")
     __format_types(grammar)
     __remove_ifdef(grammar)
-    __resolve_tokens_to_keywords(grammar, common_parser_file)
+    __resolve_tokens_to_keywords(grammar, common_parser_file, include_dirs)
 
     driver_db = DriverDB()
     global_options = Driver("options", DriverDB.GLOBAL_OPTIONS_DRIVER_NAME)
@@ -232,6 +249,7 @@ def __load_common_grammar_file(lib_dir: Path, common_parser_file: Path) -> Drive
 def __load_sub_expr_grammar(
     grammar_file: Path,
     common_parser_file: Path,
+    include_dirs: Sequence[Path],
     start_symbol: str,
     context_token: str,
 ) -> DriverDB:
@@ -243,7 +261,7 @@ def __load_sub_expr_grammar(
     grammar = DCFG.from_yacc_file(grammar_file)
     __format_types(grammar)
     __remove_ifdef(grammar)
-    __resolve_tokens_to_keywords(grammar, common_parser_file, parser_file)
+    __resolve_tokens_to_keywords(grammar, common_parser_file, include_dirs, parser_file)
 
     if start_symbol not in grammar.symbols:
         print(f"    Sub-expression start symbol '{start_symbol}' not found in {grammar_file.name}.")
@@ -265,10 +283,11 @@ def __load_sub_expr_grammar(
 
 def load_modules(lib_dir: Path, modules_dir: Path) -> DriverDB:
     common_parser_file = lib_dir / "cfg-parser.c"
+    include_dirs = (lib_dir, modules_dir)
     driver_db = DriverDB()
     module_source_dirs: List[Path] = list(filter(lambda path: path.is_dir(), modules_dir.glob("*")))
 
-    driver_db.merge(__load_common_grammar_file(lib_dir, common_parser_file))
+    driver_db.merge(__load_common_grammar_file(lib_dir, common_parser_file, include_dirs))
 
     sub_grammars = (
         (lib_dir / "filter" / "filter-expr-grammar.y", "filter_simple_expr", "LL_CONTEXT_FILTER"),
@@ -278,12 +297,14 @@ def load_modules(lib_dir: Path, modules_dir: Path) -> DriverDB:
         if not grammar_file.is_file():
             continue
         print(f"Loading sub-grammar '{grammar_file.parent.name}'.")
-        driver_db.merge(__load_sub_expr_grammar(grammar_file, common_parser_file, start_symbol, context_token))
+        driver_db.merge(
+            __load_sub_expr_grammar(grammar_file, common_parser_file, include_dirs, start_symbol, context_token)
+        )
 
     for module_source_dir in module_source_dirs:
         print(f"Loading module '{module_source_dir.name}'.")
 
-        drivers = __load_drivers_in_module(module_source_dir, common_parser_file)
+        drivers = __load_drivers_in_module(module_source_dir, common_parser_file, include_dirs)
         driver_db.merge(drivers)
 
     __post_process_driver_db(driver_db)
